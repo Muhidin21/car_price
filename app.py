@@ -382,8 +382,8 @@ def predict():
             warnings = []
             
             # Basic range validation
-            if not (1990 <= year <= 2024):
-                flash('Year must be between 1990 and 2024')
+            if not (1990 <= year <= 2025):
+                flash('Year must be between 1990 and 2025')
                 return render_template('predict.html')
             
             if not (0.5 <= engine_size <= 8.0):
