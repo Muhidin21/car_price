@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="text-center">
+    <!-- Hero Section -->
+    <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20 px-6 rounded-lg mb-12">
+        <h1 class="text-5xl font-bold mb-6">
+            <i class="fas fa-car text-6xl mb-4 block"></i>
+            Car Price Prediction System
+        </h1>
+        <p class="text-xl mb-8 max-w-2xl mx-auto">
+            Get accurate car price predictions using advanced machine learning algorithms. 
+            Our CatBoost model provides reliable estimates based on car specifications.
+        </p>
+        
+        {% if not session.user_id %}
+            <div class="space-x-4">
+                <a href="{{ url_for('register') }}" class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg text-lg font-semibold inline-block">
+                    <i class="fas fa-user-plus mr-2"></i>Get Started
+                </a>
+                <a href="{{ url_for('login') }}" class="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 rounded-lg text-lg font-semibold inline-block">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Login
+                </a>
+            </div>
+        {% else %}
+            <div class="space-x-4">
+                {% if session.role == 'admin' %}
+                    <a href="{{ url_for('admin_dashboard') }}" class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg text-lg font-semibold inline-block">
+                        <i class="fas fa-tachometer-alt mr-2"></i>Admin Dashboard
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('predict') }}" class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg text-lg font-semibold inline-block">
+                        <i class="fas fa-calculator mr-2"></i>Predict Car Price
+                    </a>
+                    <a href="{{ url_for('user_dashboard') }}" class="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 rounded-lg text-lg font-semibold inline-block">
+                        <i class="fas fa-user mr-2"></i>My Dashboard
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Features Section -->
+    <div class="grid md:grid-cols-3 gap-8 mb-12">
+        <div class="bg-white p-8 rounded-lg shadow-lg">
+            <div class="text-blue-600 text-4xl mb-4">
+                <i class="fas fa-brain"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-4">AI-Powered Predictions</h3>
+            <p class="text-gray-600">
+                Our CatBoost machine learning model provides highly accurate car price predictions 
+                based on comprehensive market data analysis.
+            </p>
+        </div>
+        
+        <div class="bg-white p-8 rounded-lg shadow-lg">
+            <div class="text-green-600 text-4xl mb-4">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-4">Real-time Analysis</h3>
+            <p class="text-gray-600">
+                Get instant price estimates by inputting car specifications including year, 
+                engine size, mileage, and transmission type.
+            </p>
+        </div>
+        
+        <div class="bg-white p-8 rounded-lg shadow-lg">
+            <div class="text-purple-600 text-4xl mb-4">
+                <i class="fas fa-history"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-4">Prediction History</h3>
+            <p class="text-gray-600">
+                Track all your previous predictions and compare different car models 
+                to make informed purchasing decisions.
+            </p>
+        </div>
+    </div>
+
+    <!-- Model Information -->
+    <div class="bg-white p-8 rounded-lg shadow-lg">
+        <h2 class="text-3xl font-bold mb-6">About Our Model</h2>
+        <div class="grid md:grid-cols-2 gap-8 text-left">
+            <div>
+                <h3 class="text-xl font-semibold mb-4 text-blue-600">
+                    <i class="fas fa-cogs mr-2"></i>Model Features
+                </h3>
+                <ul class="space-y-2 text-gray-600">
+                    <li><i class="fas fa-check text-green-500 mr-2"></i>Year of manufacture</li>
+                    <li><i class="fas fa-check text-green-500 mr-2"></i>Engine size (L)</li>
+                    <li><i class="fas fa-check text-green-500 mr-2"></i>Annual tax amount</li>
+                    <li><i class="fas fa-check text-green-500 mr-2"></i>Car model type</li>
+                    <li><i class="fas fa-check text-green-500 mr-2"></i>Mileage (miles)</li>
+                    <li><i class="fas fa-check text-green-500 mr-2"></i>Fuel efficiency (MPG)</li>
+                    <li><i class="fas fa-check text-green-500 mr-2"></i>Transmission type</li>
+                </ul>
+            </div>
+            <div>
+                <h3 class="text-xl font-semibold mb-4 text-green-600">
+                    <i class="fas fa-trophy mr-2"></i>Model Performance
+                </h3>
+                <ul class="space-y-2 text-gray-600">
+                    <li><i class="fas fa-star text-yellow-500 mr-2"></i>CatBoost Regressor Algorithm</li>
+                    <li><i class="fas fa-star text-yellow-500 mr-2"></i>High R² Score Accuracy</li>
+                    <li><i class="fas fa-star text-yellow-500 mr-2"></i>Low Mean Absolute Error</li>
+                    <li><i class="fas fa-star text-yellow-500 mr-2"></i>Robust Feature Scaling</li>
+                    <li><i class="fas fa-star text-yellow-500 mr-2"></i>Cross-validated Results</li>
+                    <li><i class="fas fa-star text-yellow-500 mr-2"></i>Production-ready Model</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

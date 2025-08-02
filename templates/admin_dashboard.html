@@ -1,0 +1,797 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Car Price Prediction{% endblock %}
+
+{% block content %}
+<div class="flex min-h-screen bg-gray-50">
+    <!-- Sidebar -->
+    <aside class="hidden md:block w-64 min-h-screen bg-white border-r border-gray-200 sticky top-0">
+        <div class="p-5 border-b">
+            <div class="flex items-center">
+                <div class="h-9 w-9 rounded-lg bg-green-100 text-green-700 flex items-center justify-center">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="ml-3">
+                    <div class="text-base font-semibold text-gray-900">Admin Panel</div>
+                    <div class="text-xs text-gray-500">Logged in as <span class="font-semibold text-gray-700">{{ session.username }}</span></div>
+                </div>
+            </div>
+        </div>
+        <nav class="p-3 space-y-1">
+            <button class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-800 flex items-center sidebar-link" data-target="overview">
+                <i class="fas fa-tachometer-alt mr-3 text-gray-600"></i>Overview
+            </button>
+            <button class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-800 flex items-center sidebar-link" data-target="users">
+                <i class="fas fa-users mr-3 text-gray-600"></i>Users
+            </button>
+            <button class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-800 flex items-center sidebar-link" data-target="predictions">
+                <i class="fas fa-database mr-3 text-gray-600"></i>Predictions
+            </button>
+            <button class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-800 flex items-center sidebar-link" data-target="analytics">
+                <i class="fas fa-chart-line mr-3 text-gray-600"></i>Reports
+            </button>
+        </nav>
+        <div class="p-3 border-t">
+            <a href="{{ url_for('logout') }}" class="w-full inline-flex items-center justify-center rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 transition">
+                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main content -->
+    <section class="flex-1">
+        <!-- Keep header -->
+        <!-- Top bar -->
+        <div class="bg-white border-b border-gray-200">
+            <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-semibold text-gray-900"><i class="fas fa-tachometer-alt mr-2 text-gray-700"></i>Admin Dashboard</h1>
+                    <p class="text-sm text-gray-500">System overview and management</p>
+                </div>
+               
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto p-6 space-y-10">
+            <!-- Overview Section (full width page, not cards) -->
+            <div id="section-overview" class="section">
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold text-gray-900">Overview</h2>
+                    <p class="text-sm text-gray-500">Key metrics at a glance</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-lg bg-gray-100 text-gray-700">
+                                <i class="fas fa-users text-lg"></i>
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-3xl font-semibold text-gray-900">{{ total_users }}</div>
+                                <div class="text-gray-500">Total Users</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-lg bg-gray-100 text-gray-700">
+                                <i class="fas fa-calculator text-lg"></i>
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-3xl font-semibold text-gray-900">{{ total_predictions }}</div>
+                                <div class="text-gray-500">Total Predictions</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900"><i class="fas fa-history mr-2 text-gray-700"></i>Recent Predictions</h3>
+                        <button onclick="viewAllPredictions()" class="text-sm text-gray-700 hover:text-black">View all</button>
+                    </div>
+                    {% if recent_predictions %}
+                        <div class="divide-y">
+                            {% for prediction in recent_predictions[:8] %}
+                            <div class="py-4 flex items-center justify-between">
+                                <div>
+                                    <div class="font-semibold text-gray-800">{{ prediction.username }}</div>
+                                    <div class="text-sm text-gray-600">
+                                        {{ prediction.year }} Model | {{ prediction.engine_size }}L | {% if prediction.transmission_manual == 1 %}Manual{% else %}Automatic{% endif %}
+                                    </div>
+                                    <div class="text-xs text-gray-400">
+                                        {{ prediction.created_at.strftime('%Y-%m-%d %H:%M') }} | {{ "{:,}".format(prediction.mileage) }} miles | {{ prediction.mpg }} MPG
+                                    </div>
+                                </div>
+                                <div class="text-[#28a745] font-bold">${{ "{:,.0f}".format(prediction.predicted_price) }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-gray-500">No recent predictions</div>
+                    {% endif %}
+                </div>
+
+                <div class="mt-8 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900"><i class="fas fa-chart-area mr-2 text-gray-700"></i>Usage Reports</h3>
+                        <div class="flex space-x-2">
+                            <button onclick="changeChartPeriod('7d')" class="px-3 py-1 rounded-md text-sm bg-green-600 text-white hover:bg-green-700 transition">7 Days</button>
+                            <button onclick="changeChartPeriod('30d')" class="px-3 py-1 rounded-md text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 transition">30 Days</button>
+                            <button onclick="changeChartPeriod('90d')" class="px-3 py-1 rounded-md text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 transition">90 Days</button>
+                        </div>
+                    </div>
+                    <div class="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+                        <canvas id="analyticsChart" width="800" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Management Section -->
+            <div id="section-users" class="section hidden">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="text-2xl font-semibold text-gray-900">User Management</h2>
+                        <p class="text-sm text-gray-500">View and manage all users</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="relative">
+                            <input id="userSearch" type="text" placeholder="Search users..." class="pl-9 pr-3 py-2 border border-gray-300 rounded-md w-64 focus:outline-none focus:ring-2 focus:ring-gray-300" oninput="filterUsers()">
+                            <i class="fas fa-search text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                        </div>
+                        <button onclick="exportUsers()" class="inline-flex items-center rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 transition"><i class="fas fa-download mr-2"></i>Export</button>
+                    </div>
+                </div>
+
+                <div class="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+                    <div class="bg-gray-50 px-4 py-3 flex items-center justify-between">
+                        <div class="text-sm text-gray-600"><span id="usersCount">0</span> users</div>
+                        <div class="text-sm text-gray-500">Click a row to view details</div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full table-auto" id="usersTable">
+                            <thead>
+                                <tr class="text-left text-sm text-gray-600 border-b">
+                                    <th class="px-4 py-3">Username</th>
+                                    <th class="px-4 py-3">Email</th>
+                                    <th class="px-4 py-3">Joined</th>
+                                    <th class="px-4 py-3">Predictions</th>
+                                    <th class="px-4 py-3">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersBody">
+                                <tr>
+                                    <td colspan="5" class="px-4 py-6 text-center text-gray-500">Loading users...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Inline User Detail Card pinned/top of viewport for quick viewing -->
+                <div id="userDetailCard" class="mt-4"></div>
+            </div>
+
+            <!-- Analytics Section -->
+            <div id="section-analytics" class="section hidden">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Reports</h2>
+                <div class="space-x-2 mb-4">
+                    <button onclick="viewAnalytics()" class="inline-flex items-center rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 transition"><i class="fas fa-chart-line mr-2"></i>View Reports</button>
+                    <button onclick="exportReports()" class="inline-flex items-center rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-200 transition"><i class="fas fa-file-export mr-2"></i>Export Reports</button>
+                </div>
+                <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                    <div class="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+                        <canvas id="analyticsChart2" width="800" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Predictions Section -->
+            <div id="section-predictions" class="section hidden">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="text-2xl font-semibold text-gray-900">All Predictions</h2>
+                        <p class="text-sm text-gray-500">Review, view details, and delete predictions</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <input id="predSearch" type="text" placeholder="Search by user..." class="pl-3 pr-3 py-2 border border-gray-300 rounded-md w-64 focus:outline-none focus:ring-2 focus:ring-gray-300" oninput="filterPredictions()">
+                    </div>
+                </div>
+
+                <div class="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+                    <div class="bg-gray-50 px-4 py-3 flex items-center justify-between">
+                        <div class="text-sm text-gray-600"><span id="predCount">0</span> predictions</div>
+                        <div class="text-sm text-gray-500">Tip: Use the trash icon to delete an entry</div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full table-auto" id="predictionsTable">
+                            <thead>
+                                <tr class="text-left text-sm text-gray-600 border-b">
+                                    <th class="px-4 py-3">User</th>
+                                    <th class="px-4 py-3">Date</th>
+                                    <th class="px-4 py-3">Spec</th>
+                                    <th class="px-4 py-3">Price</th>
+                                    <th class="px-4 py-3">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="predictionsBody">
+                                <tr>
+                                    <td colspan="5" class="px-4 py-6 text-center text-gray-500">Loading predictions...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="flex items-center justify-between p-3 border-t">
+                        <div class="text-sm text-gray-600">Page <span id="predPage">1</span></div>
+                        <div class="space-x-2">
+                            <button class="px-3 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-sm" onclick="prevPredPage()">Prev</button>
+                            <button class="px-3 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-sm" onclick="nextPredPage()">Next</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="predDetailCard" class="mt-4"></div>
+            </div>
+
+            <!-- Settings Section removed -->
+        </div>
+    </section>
+</div>
+
+<!-- Users Modal (reused) -->
+<div id="usersModal" class="fixed inset-0 bg-black bg-opacity-40 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-xl border border-gray-200 max-w-4xl w-full p-6 max-h-96 overflow-y-auto shadow-xl">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold">All Users</h3>
+                <button onclick="closeUsersModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="usersContent">
+                <!-- Users list will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let allUsers = [];
+let allPredictions = [];
+let predPage = 1;
+let predPageSize = 20;
+
+function loadUsersIntoTable(users) {
+    const tbody = document.getElementById('usersBody');
+    const count = document.getElementById('usersCount');
+    if (!tbody) return;
+    if (!users || users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-6 text-center text-gray-500">No users found</td></tr>';
+        if (count) count.textContent = '0';
+        return;
+    }
+    let html = '';
+    users.forEach(user => {
+        const joined = user.created_at ? new Date(user.created_at).toLocaleDateString() : '-';
+        // Use MongoDB ObjectId string exactly as provided by backend.
+        const oid = (user._id ?? user.id ?? '').toString();
+        html += `
+            <tr class="border-b hover:bg-blue-50 cursor-pointer" data-user-id="${oid}" onclick="viewUserRow(this)">
+                <td class="px-4 py-3 font-medium text-gray-800">${user.username}</td>
+                <td class="px-4 py-3">${user.email}</td>
+                <td class="px-4 py-3">${joined}</td>
+                <td class="px-4 py-3">${(user.prediction_count ?? user.predictions ?? user.count ?? 0)}</td>
+                <td class="px-4 py-3">
+                    <button onclick="event.stopPropagation(); deleteUser('${oid}', '${user.username}')" class="text-red-600 hover:text-red-800 text-sm">
+                        <i class="fas fa-trash mr-1"></i>Delete
+                    </button>
+                </td>
+            </tr>`;
+    });
+    tbody.innerHTML = html;
+    if (count) count.textContent = users.length;
+}
+
+function fetchAllUsers() {
+    const tbody = document.getElementById('usersBody');
+    if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-6 text-center text-gray-500">Loading users...</td></tr>';
+    }
+    fetch('/admin/users')
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                allUsers = data.users || [];
+                loadUsersIntoTable(allUsers);
+            } else {
+                loadUsersIntoTable([]);
+            }
+        })
+        .catch(() => loadUsersIntoTable([]));
+}
+
+function filterUsers() {
+    const q = (document.getElementById('userSearch')?.value || '').toLowerCase();
+    if (!q) {
+        loadUsersIntoTable(allUsers);
+        return;
+    }
+    const filtered = allUsers.filter(u =>
+        (u.username || '').toLowerCase().includes(q) ||
+        (u.email || '').toLowerCase().includes(q)
+    );
+    loadUsersIntoTable(filtered);
+}
+
+function closeUsersModal() {
+    document.getElementById('usersModal').classList.add('hidden');
+}
+
+function viewUserRow(trEl) {
+    const id = trEl?.getAttribute('data-user-id');
+    if (!id) return;
+    viewUserDetails(id);
+}
+
+function viewUserDetails(userId) {
+    // Use ObjectId string directly (backend expects MongoDB ObjectId).
+    const id = String(userId);
+    if (!id) return;
+    // Fetch and display user details in a top-fixed card (visible immediately)
+    fetch(`/admin/user/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('userDetailCard');
+            if (!container) return;
+            if (data.success) {
+                const u = data.user || {};
+                const joined = u.created_at ? new Date(u.created_at).toLocaleDateString() : '-';
+                container.innerHTML = `
+                    <div class="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-11/12 md:w-[720px] border border-gray-200 rounded-xl p-5 bg-white shadow-xl">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-lg font-semibold text-gray-800">
+                                <i class="fas fa-id-card mr-2 text-[#1e90ff]"></i>User Profile
+                            </h3>
+                            <button class="text-gray-400 hover:text-gray-600" onclick="closeUserCard()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <div class="text-sm text-gray-500">Username</div>
+                                <div class="font-medium text-gray-900">${u.username || '-'}</div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-500">Email</div>
+                                <div class="font-medium text-gray-900 break-all">${u.email || '-'}</div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-500">Predictions</div>
+                                <div class="font-medium text-gray-900">${u.prediction_count ?? u.predictions ?? u.count ?? 0}</div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-500">Joined</div>
+                                <div class="font-medium text-gray-900">${joined}</div>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center justify-end space-x-2">
+                            <button onclick="deleteUser('${u._id}', '${u.username}')" class="inline-flex items-center rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-black transition">
+                                <i class="fas fa-trash mr-2"></i>Delete User
+                            </button>
+                            <button onclick="closeUserCard()" class="inline-flex items-center rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-200 transition">Close</button>
+                        </div>
+                    </div>
+                `;
+                // No scrollIntoView; it's fixed near top-center.
+            } else {
+                container.innerHTML = `
+                    <div class="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-11/12 md:w-[720px] border border-red-200 bg-red-50 text-red-700 px-4 py-3 rounded-lg shadow-xl">
+                        Error loading user details
+                        <button class="float-right text-red-500" onclick="closeUserCard()"><i class="fas fa-times"></i></button>
+                    </div>
+                `;
+            }
+        })
+        .catch(() => {
+            const container = document.getElementById('userDetailCard');
+            if (container) {
+                container.innerHTML = `
+                    <div class="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-11/12 md:w-[720px] border border-red-200 bg-red-50 text-red-700 px-4 py-3 rounded shadow-xl">
+                        Error loading user details
+                        <button class="float-right text-red-500" onclick="closeUserCard()"><i class="fas fa-times"></i></button>
+                    </div>
+                `;
+            }
+        });
+}
+
+function deleteUser(userId, username) {
+    if (confirm(`Are you sure you want to delete user "${username}"? This action cannot be undone.`)) {
+        fetch(`/admin/user/${userId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('User deleted successfully');
+                viewAllUsers(); // Refresh the user list
+            } else {
+                alert('Error deleting user: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('Error deleting user');
+        });
+    }
+}
+
+function exportUsers() {
+    // Export users to CSV
+    fetch('/admin/export/users')
+        .then(response => response.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'users_export.csv';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+        })
+        .catch(error => {
+            alert('Error exporting users');
+        });
+}
+
+function viewAnalytics() {
+    // No-op: charts below already load automatically via drawAnalyticsChart()
+}
+
+// Predictions page helpers
+function loadPredictions(page = 1) {
+    const body = document.getElementById('predictionsBody');
+    const countEl = document.getElementById('predCount');
+    const pageEl = document.getElementById('predPage');
+    if (body) body.innerHTML = '<tr><td colspan="5" class="px-4 py-6 text-center text-gray-500">Loading predictions...</td></tr>';
+    fetch(`/admin/predictions?page=${page}&page_size=${predPageSize}`)
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) throw new Error(data.message || 'Failed');
+            allPredictions = data.items || [];
+            if (countEl) countEl.textContent = data.total ?? allPredictions.length;
+            if (pageEl) pageEl.textContent = data.page ?? page;
+            renderPredictions(allPredictions);
+        })
+        .catch(() => {
+            if (body) body.innerHTML = '<tr><td colspan="5" class="px-4 py-6 text-center text-red-600">Error loading predictions</td></tr>';
+        });
+}
+
+function renderPredictions(items) {
+    const body = document.getElementById('predictionsBody');
+    if (!body) return;
+    if (!items || items.length === 0) {
+        body.innerHTML = '<tr><td colspan="5" class="px-4 py-6 text-center text-gray-500">No predictions</td></tr>';
+        return;
+    }
+    let html = '';
+    items.forEach(p => {
+        const dateStr = p.created_at ? new Date(p.created_at).toLocaleString() : '-';
+        const spec = `${p.year} | ${p.engine_size}L | MPG ${p.mpg} | ${p.transmission}`;
+        html += `
+            <tr class="border-b hover:bg-blue-50">
+                <td class="px-4 py-3 font-medium text-gray-800">${p.username || '-'}</td>
+                <td class="px-4 py-3">${dateStr}</td>
+                <td class="px-4 py-3 text-sm text-gray-700">${spec}</td>
+                <td class="px-4 py-3 font-semibold text-green-700">$${(p.predicted_price ?? 0).toFixed(2)}</td>
+                <td class="px-4 py-3 space-x-2">
+                    <button class="text-red-600 hover:text-red-800 text-sm" onclick="deletePrediction('${p._id}')"><i class="fas fa-trash mr-1"></i>Delete</button>
+                    <button class="text-gray-700 hover:text-black text-sm" onclick="viewPredictionDetail('${p._id}')"><i class="fas fa-eye mr-1"></i>View</button>
+                </td>
+            </tr>`;
+    });
+    body.innerHTML = html;
+}
+
+function filterPredictions() {
+    const q = (document.getElementById('predSearch')?.value || '').toLowerCase();
+    if (!q) {
+        renderPredictions(allPredictions);
+        return;
+    }
+    const filtered = allPredictions.filter(p => (p.username || '').toLowerCase().includes(q));
+    renderPredictions(filtered);
+}
+
+function prevPredPage() {
+    if (predPage > 1) {
+        predPage -= 1;
+        loadPredictions(predPage);
+    }
+}
+
+function nextPredPage() {
+    predPage += 1;
+    loadPredictions(predPage);
+}
+
+function deletePrediction(id) {
+    if (!confirm('Delete this prediction?')) return;
+    fetch(`/admin/predictions/${id}`, { method: 'DELETE' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                loadPredictions(predPage);
+            } else {
+                alert('Error deleting prediction: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(() => alert('Error deleting prediction'));
+}
+
+function viewPredictionDetail(id) {
+    const p = allPredictions.find(x => x._id === id);
+    if (!p) return;
+    const card = document.getElementById('predDetailCard');
+    if (!card) return;
+    card.innerHTML = `
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+            <div class="w-11/12 md:w-[720px] max-w-[720px] border border-gray-200 rounded-xl p-5 bg-white shadow-xl">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-lg font-semibold text-gray-800">
+                        <i class="fas fa-file-alt mr-2 text-[#1e90ff]"></i>Prediction Detail
+                    </h3>
+                    <button class="text-gray-400 hover:text-gray-600" onclick="document.getElementById('predDetailCard').innerHTML=''">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div><div class="text-sm text-gray-500">User</div><div class="font-medium text-gray-900">${p.username || '-'}</div></div>
+                    <div><div class="text-sm text-gray-500">Date</div><div class="font-medium text-gray-900">${p.created_at ? new Date(p.created_at).toLocaleString() : '-'}</div></div>
+                    <div><div class="text-sm text-gray-500">Year</div><div class="font-medium text-gray-900">${p.year}</div></div>
+                    <div><div class="text-sm text-gray-500">Engine</div><div class="font-medium text-gray-900">${p.engine_size} L</div></div>
+                    <div><div class="text-sm text-gray-500">Mileage</div><div class="font-medium text-gray-900">${p.mileage}</div></div>
+                    <div><div class="text-sm text-gray-500">MPG</div><div class="font-medium text-gray-900">${p.mpg}</div></div>
+                    <div><div class="text-sm text-gray-500">Transmission</div><div class="font-medium text-gray-900">${p.transmission}</div></div>
+                    <div><div class="text-sm text-gray-500">Predicted Price</div><div class="font-medium text-green-700">$${(p.predicted_price ?? 0).toFixed(2)}</div></div>
+                </div>
+                <div class="mt-4 flex items-center justify-end">
+                    <button class="inline-flex items-center rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-200 transition" onclick="document.getElementById('predDetailCard').innerHTML=''">Close</button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function exportReports() {
+    // Export predictions report
+    fetch('/admin/export/predictions')
+        .then(response => response.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'predictions_report.csv';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+        })
+        .catch(error => {
+            alert('Error exporting reports');
+        });
+}
+
+function testModel() {
+    // Test the CatBoost model
+    fetch('/test_model')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`✅ Model Test Successful!\n\nModel Type: ${data.model_type}\nTest Input: 2020 Fiesta, 1.5L, Manual\nPredicted Price: $${data.predicted_price}\n\n${data.message}`);
+            } else {
+                alert(`❌ Model Test Failed!\n\n${data.message}`);
+            }
+        })
+        .catch(error => {
+            alert('❌ Error testing model: ' + error);
+        });
+}
+
+/* settings removed */
+
+function viewAllPredictions() {
+    alert('All predictions view would be implemented here');
+}
+
+function changeChartPeriod(period) {
+    // Update chart buttons visual state
+    document.querySelectorAll('[onclick^="changeChartPeriod"]').forEach(btn => {
+        btn.className = 'px-3 py-1 rounded-md text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 transition';
+    });
+    if (event && event.target) {
+        event.target.className = 'px-3 py-1 rounded-md text-sm bg-green-600 text-white hover:bg-green-700 transition';
+    }
+    drawAnalyticsChart();
+}
+
+function drawAnalyticsChart() {
+    // Fetch real data for both charts
+    fetch('/admin/reports/summary')
+        .then(r => r.json())
+        .then(report => {
+            const labels = report.success ? report.labels : ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+            const predictions = report.success ? report.predictions : [12,19,8,15,22,18,25];
+            const users = report.success ? report.new_users : [3,5,2,4,7,6,8];
+
+            // Chart 1: Overview trends (line)
+            const c1 = document.getElementById('analyticsChart');
+            if (c1) {
+                const ctx = c1.getContext('2d');
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const width = ctx.canvas.width;
+                const height = ctx.canvas.height;
+                const maxValue = Math.max(...predictions, ...users) || 1;
+
+                // Predictions line (green)
+                ctx.beginPath();
+                ctx.strokeStyle = '#16a34a';
+                ctx.lineWidth = 3;
+                for (let i = 0; i < predictions.length; i++) {
+                    const x = (i / (predictions.length - 1)) * (width - 100) + 50;
+                    const y = height - 50 - ((predictions[i] / maxValue) * (height - 100));
+                    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+
+                // Users line (gray)
+                ctx.beginPath();
+                ctx.strokeStyle = '#6B7280';
+                ctx.lineWidth = 3;
+                for (let i = 0; i < users.length; i++) {
+                    const x = (i / (users.length - 1)) * (width - 100) + 50;
+                    const y = height - 50 - ((users[i] / maxValue) * (height - 100));
+                    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+
+                // X labels
+                ctx.fillStyle = '#6B7280';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                for (let i = 0; i < labels.length; i++) {
+                    const x = (i / (labels.length - 1)) * (width - 100) + 50;
+                    ctx.fillText(labels[i], x, height - 20);
+                }
+
+                // Legend
+                ctx.fillStyle = '#16a34a';
+                ctx.fillRect(width - 150, 20, 15, 3);
+                ctx.fillStyle = '#374151';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'left';
+                ctx.fillText('Predictions', width - 130, 25);
+
+                ctx.fillStyle = '#6B7280';
+                ctx.fillRect(width - 150, 40, 15, 3);
+                ctx.fillStyle = '#374151';
+                ctx.fillText('New Users', width - 130, 45);
+            }
+
+            // Chart 2: Reports bar chart
+            const c2 = document.getElementById('analyticsChart2');
+            if (c2) {
+                const ctx2 = c2.getContext('2d');
+                ctx2.clearRect(0, 0, ctx2.canvas.width, ctx2.canvas.height);
+                const width = ctx2.canvas.width;
+                const height = ctx2.canvas.height;
+                const maxValue = Math.max(...predictions) || 1;
+                const chartWidth = width - 100;
+                const barWidth = chartWidth / predictions.length - 10;
+
+                for (let i = 0; i < predictions.length; i++) {
+                    const x = 50 + i * (barWidth + 10);
+                    const h = ((predictions[i] / maxValue) * (height - 100));
+                    const y = height - 50 - h;
+                    // Bar
+                    ctx2.fillStyle = '#16a34a';
+                    ctx2.fillRect(x, y, barWidth, h);
+                    // Label
+                    ctx2.fillStyle = '#6B7280';
+                    ctx2.font = '12px Arial';
+                    ctx2.textAlign = 'center';
+                    ctx2.fillText(labels[i], x + barWidth / 2, height - 20);
+                }
+            }
+        })
+        .catch(() => {
+            // If API fails, fall back to existing sample rendering
+            const c1 = document.getElementById('analyticsChart');
+            if (c1) {
+                const ctx = c1.getContext('2d');
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+                const predictions = [12,19,8,15,22,18,25];
+                const users = [3,5,2,4,7,6,8];
+                const width = ctx.canvas.width;
+                const height = ctx.canvas.height;
+                const maxValue = Math.max(...predictions, ...users) || 1;
+
+                ctx.beginPath();
+                ctx.strokeStyle = '#16a34a';
+                ctx.lineWidth = 3;
+                for (let i = 0; i < predictions.length; i++) {
+                    const x = (i / (predictions.length - 1)) * (width - 100) + 50;
+                    const y = height - 50 - ((predictions[i] / maxValue) * (height - 100));
+                    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.strokeStyle = '#6B7280';
+                ctx.lineWidth = 3;
+                for (let i = 0; i < users.length; i++) {
+                    const x = (i / (users.length - 1)) * (width - 100) + 50;
+                    const y = height - 50 - ((users[i] / maxValue) * (height - 100));
+                    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+
+                ctx.fillStyle = '#6B7280';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                for (let i = 0; i < labels.length; i++) {
+                    const x = (i / (labels.length - 1)) * (width - 100) + 50;
+                    ctx.fillText(labels[i], x, height - 20);
+                }
+            }
+        });
+}
+
+function activateSection(id) {
+    // Hide all sections
+    document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+    // Show selected
+    const el = document.getElementById('section-' + id);
+    if (el) el.classList.remove('hidden');
+    // Update sidebar active state
+    document.querySelectorAll('.sidebar-link').forEach(btn => {
+        btn.classList.remove('bg-blue-100', 'text-blue-700');
+    });
+    const activeBtn = document.querySelector(`.sidebar-link[data-target="${id}"]`);
+    if (activeBtn) {
+        activeBtn.classList.add('bg-blue-100', 'text-blue-700');
+    }
+}
+
+function closeUserCard() {
+    const c = document.getElementById('userDetailCard');
+    if (c) c.innerHTML = '';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Sidebar navigation
+    document.querySelectorAll('.sidebar-link').forEach(btn => {
+        btn.addEventListener('click', () => {
+            activateSection(btn.dataset.target);
+            if (btn.dataset.target === 'users') {
+                fetchAllUsers();
+            } else if (btn.dataset.target === 'predictions') {
+                predPage = 1;
+                loadPredictions(predPage);
+            } else if (btn.dataset.target === 'analytics') {
+                drawAnalyticsChart();
+            }
+        });
+    });
+
+    // Ensure overview content is visible initially and marked active
+    activateSection('overview');
+
+    // Load initial data
+    fetchAllUsers();
+    drawAnalyticsChart();
+});
+</script>
+{% endblock %}

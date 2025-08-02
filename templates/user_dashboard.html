@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+{% block title %}User Dashboard - Car Price Prediction{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Welcome Header -->
+    <div class="bg-[#1e90ff] text-white p-8 rounded-lg">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold mb-2">
+                    <i class="fas fa-user-circle mr-3"></i>Welcome back, {{ session.username }}!
+                </h1>
+                <p class="text-blue-100">Ready to predict some car prices?</p>
+            </div>
+            <div class="text-right">
+                <div class="text-2xl font-bold">{{ predictions|length }}</div>
+                <div class="text-blue-100">Total Predictions</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid md:grid-cols-3 gap-6">
+        <a href="{{ url_for('predict') }}" class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow group">
+            <div class="flex items-center">
+                <div class="bg-green-100 p-3 rounded-full group-hover:bg-green-200 transition-colors">
+                    <i class="fas fa-calculator text-[#28a745] text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-semibold text-gray-800">New Prediction</h3>
+                    <p class="text-gray-600">Predict car price</p>
+                </div>
+            </div>
+        </a>
+
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <div class="flex items-center">
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class="fas fa-history text-blue-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-semibold text-gray-800">{{ predictions|length }}</h3>
+                    <p class="text-gray-600">Total Predictions</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <div class="flex items-center">
+                <div class="bg-purple-100 p-3 rounded-full">
+                    <i class="fas fa-chart-line text-purple-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-semibold text-gray-800">
+                        {% if predictions %}
+                            ${{ "%.0f"|format(predictions|map(attribute='predicted_price')|list|sum / predictions|length) }}
+                        {% else %}
+                            $0
+                        {% endif %}
+                    </h3>
+                    <p class="text-gray-600">Avg. Prediction</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Predictions -->
+    <div class="bg-white rounded-lg shadow-lg">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold text-gray-800">
+                    <i class="fas fa-history mr-2 text-blue-600"></i>Recent Predictions
+                </h2>
+                {% if predictions %}
+                    <button onclick="exportPredictions()" class="bg-[#1e90ff] hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                        <i class="fas fa-download mr-2"></i>Export
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="p-6">
+            {% if predictions %}
+                <div class="overflow-x-auto">
+                    <table class="w-full table-auto">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Date</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Car Details</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Specs</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Predicted Price</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            {% for prediction in predictions[:10] %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-4 text-sm text-gray-600">
+                                    {{ prediction.created_at.strftime('%Y-%m-%d') }}<br>
+                                    <span class="text-xs text-gray-400">{{ prediction.created_at.strftime('%H:%M') }}</span>
+                                </td>
+                                <td class="px-4 py-4">
+                                    <div class="text-sm font-medium text-gray-800">{{ prediction.year }} Model</div>
+                                    <div class="text-xs text-gray-600">
+                                        Engine: {{ prediction.engine_size }}L | 
+                                        {% if prediction.transmission_manual == 1 %}Manual{% else %}Automatic{% endif %}
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 text-sm text-gray-600">
+                                    <div>{{ "{:,}".format(prediction.mileage) }} miles</div>
+                                    <div>{{ prediction.mpg }} MPG</div>
+                                    <div>${{ prediction.tax }} tax</div>
+                                </td>
+                                <td class="px-4 py-4">
+                                    <div class="text-lg font-bold text-[#28a745]">
+                                        ${{ "{:,.2f}".format(prediction.predicted_price) }}
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4">
+                                    <button onclick="viewDetails('{{ prediction._id }}')" 
+                                            class="text-[#1e90ff] hover:text-blue-800 text-sm">
+                                        <i class="fas fa-eye mr-1"></i>View
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if predictions|length > 10 %}
+                    <div class="mt-6 text-center">
+                        <button onclick="loadMorePredictions()" 
+                                class="bg-[#1e90ff] hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
+                            <i class="fas fa-chevron-down mr-2"></i>Load More
+                        </button>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-12">
+                    <i class="fas fa-chart-line text-6xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-600 mb-2">No predictions yet</h3>
+                    <p class="text-gray-500 mb-6">Start by making your first car price prediction!</p>
+                    <a href="{{ url_for('predict') }}" 
+                       class="bg-[#1e90ff] hover:bg-blue-700 text-white px-6 py-3 rounded-lg inline-block">
+                        <i class="fas fa-calculator mr-2"></i>Make First Prediction
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Statistics Chart (if predictions exist) -->
+    {% if predictions %}
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">
+            <i class="fas fa-chart-bar mr-2 text-[#1e90ff]"></i>Prediction Trends
+        </h2>
+        <div class="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+            <canvas id="predictionChart" width="400" height="200"></canvas>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Prediction Details Modal -->
+<div id="predictionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg max-w-md w-full p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold">Prediction Details</h3>
+                <button onclick="closePredictionModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="predictionDetails">
+                <!-- Details will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewDetails(predictionId) {
+    // Show modal with prediction details
+    document.getElementById('predictionModal').classList.remove('hidden');
+    // In a real app, you'd fetch details via AJAX
+    document.getElementById('predictionDetails').innerHTML = `
+        <p class="text-gray-600">Loading prediction details...</p>
+    `;
+}
+
+function closePredictionModal() {
+    document.getElementById('predictionModal').classList.add('hidden');
+}
+
+function exportPredictions() {
+    // In a real app, this would generate and download a CSV/PDF
+    alert('Export functionality would be implemented here');
+}
+
+function loadMorePredictions() {
+    // In a real app, this would load more predictions via AJAX
+    alert('Load more functionality would be implemented here');
+}
+
+// Simple chart if predictions exist
+{% if predictions %}
+document.addEventListener('DOMContentLoaded', function() {
+    const canvas = document.getElementById('predictionChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    // Data from server (ensure valid JS via Jinja)
+    const dates = [{% for p in predictions[-7:] %}'{{ p.created_at.strftime("%m/%d") }}'{% if not loop.last %},{% endif %}{% endfor %}];
+    const prices = [{% for p in predictions[-7:] %}{{ p.predicted_price|float }}{% if not loop.last %},{% endif %}{% endfor %}];
+
+    // Simple line chart drawing
+    ctx.beginPath();
+    ctx.strokeStyle = '#1e90ff';
+    ctx.lineWidth = 2;
+
+    const width = ctx.canvas.width;
+    const height = ctx.canvas.height;
+    const maxPrice = Math.max.apply(null, prices);
+    const minPrice = Math.min.apply(null, prices);
+    const priceRange = (maxPrice - minPrice) || 1;
+
+    for (let i = 0; i < prices.length; i++) {
+        const x = (i / (prices.length - 1)) * width;
+        const y = height - ((prices[i] - minPrice) / priceRange) * height;
+
+        if (i === 0) {
+            ctx.moveTo(x, y);
+        } else {
+            ctx.lineTo(x, y);
+        }
+    }
+
+    ctx.stroke();
+
+    // Add labels
+    ctx.fillStyle = '#6B7280';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'center';
+
+    for (let i = 0; i < dates.length; i++) {
+        const x = (i / (dates.length - 1)) * width;
+        ctx.fillText(dates[i], x, height - 5);
+    }
+});
+{% endif %}
+</script>
+{% endblock %}
