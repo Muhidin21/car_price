@@ -9,8 +9,8 @@
             Car Price Prediction System
         </h1>
         <p class="text-xl mb-8 max-w-2xl mx-auto">
-            Get accurate car price predictions using advanced machine learning algorithms. 
-            Our CatBoost model provides reliable estimates based on car specifications.
+            Get accurate car price predictions using advanced machine learning algorithms.
+            Our XGBoost model provides reliable estimates based on car specifications.
         </p>
         
         {% if not session.user_id %}
@@ -48,7 +48,7 @@
             </div>
             <h3 class="text-xl font-bold mb-4">AI-Powered Predictions</h3>
             <p class="text-gray-600">
-                Our CatBoost machine learning model provides highly accurate car price predictions 
+                Our XGBoost machine learning model provides highly accurate car price predictions
                 based on comprehensive market data analysis.
             </p>
         </div>
@@ -88,7 +88,6 @@
                     <li><i class="fas fa-check text-green-500 mr-2"></i>Year of manufacture</li>
                     <li><i class="fas fa-check text-green-500 mr-2"></i>Engine size (L)</li>
                     <li><i class="fas fa-check text-green-500 mr-2"></i>Annual tax amount</li>
-                    <li><i class="fas fa-check text-green-500 mr-2"></i>Car model type</li>
                     <li><i class="fas fa-check text-green-500 mr-2"></i>Mileage (miles)</li>
                     <li><i class="fas fa-check text-green-500 mr-2"></i>Fuel efficiency (MPG)</li>
                     <li><i class="fas fa-check text-green-500 mr-2"></i>Transmission type</li>
@@ -99,10 +98,10 @@
                     <i class="fas fa-trophy mr-2"></i>Model Performance
                 </h3>
                 <ul class="space-y-2 text-gray-600">
-                    <li><i class="fas fa-star text-yellow-500 mr-2"></i>CatBoost Regressor Algorithm</li>
+                    <li><i class="fas fa-star text-yellow-500 mr-2"></i>XGBoost Regressor Algorithm</li>
                     <li><i class="fas fa-star text-yellow-500 mr-2"></i>High R² Score Accuracy</li>
                     <li><i class="fas fa-star text-yellow-500 mr-2"></i>Low Mean Absolute Error</li>
-                    <li><i class="fas fa-star text-yellow-500 mr-2"></i>Robust Feature Scaling</li>
+                    <li><i class="fas fa-star text-yellow-500 mr-2"></i>No Feature Scaling Required</li>
                     <li><i class="fas fa-star text-yellow-500 mr-2"></i>Cross-validated Results</li>
                     <li><i class="fas fa-star text-yellow-500 mr-2"></i>Production-ready Model</li>
                 </ul>

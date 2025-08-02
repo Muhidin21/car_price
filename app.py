@@ -23,9 +23,9 @@ app = Flask(__name__)
 try:
     Config.validate_config()
     app.secret_key = Config.SECRET_KEY
-    print("✅ Configuration validated successfully")
+    print("[OK] Configuration validated successfully")
 except ValueError as e:
-    print(f"❌ Configuration error: {e}")
+    print(f"[ERROR] Configuration error: {e}")
     print("Please check your .env file and update the MongoDB URI")
     exit(1)
 
@@ -44,7 +44,7 @@ try:
     client = MongoClient(Config.MONGODB_URI)
     # Test the connection
     client.admin.command('ping')
-    print("✅ Connected to MongoDB Atlas successfully")
+    print("[OK] Connected to MongoDB Atlas successfully")
     
     db = client[Config.DATABASE_NAME]
     users_collection = db[Config.USERS_COLLECTION]
@@ -52,45 +52,46 @@ try:
     otp_collection = db['otp_codes']  # New collection for OTP codes
     
 except Exception as e:
-    print(f"❌ Error connecting to MongoDB Atlas: {e}")
+    print(f"[ERROR] Error connecting to MongoDB Atlas: {e}")
     print("Please check your MongoDB Atlas connection string and network access")
     client = None
     db = None
 
-# Load Random Forest model, scaler, and features
+# Load XGBoost model and features (no scaler needed)
 try:
-    # Load Random Forest model
+    # Load XGBoost model
     model = joblib.load(Config.MODEL_PATH)
     model_type = type(model).__name__
-    print(f"✅ Random Forest Model loaded successfully: {model_type}")
+    print(f"[OK] XGBoost Model loaded successfully: {model_type}")
     
-    # Load scaler
-    scaler = joblib.load(Config.SCALER_PATH)
-    scaler_type = type(scaler).__name__
-    print(f"✅ Scaler loaded successfully: {scaler_type}")
+    # XGBoost does not require scaler
+    scaler = None
+    print("[INFO] Skipping scaler load (XGBoost model does not require scaling)")
     
-    # Load selected features
+    # Load selected features (order used at training)
     selected_features = joblib.load(Config.FEATURES_PATH)
-    print(f"✅ Features loaded successfully: {selected_features}")
-    print(f"✅ Number of features: {len(selected_features)}")
+    print(f"[OK] Features loaded successfully: {selected_features}")
+    print(f"[OK] Number of features: {len(selected_features)}")
     
-    if 'RandomForest' in model_type:
-        print("✅ Random Forest Regressor confirmed")
-        print("✅ System ready for scaled predictions")
+    if 'XGB' in model_type or 'XGBoost' in model_type:
+        print("[OK] XGBoost Regressor detected")
+        print("[OK] System ready for direct predictions without scaling")
+    elif 'RandomForest' in model_type:
+        print("[OK] Random Forest Regressor confirmed")
+        print("[OK] System ready for predictions")
     elif 'CatBoost' in model_type:
-        print("✅ CatBoost Regressor detected")
-        print("✅ System ready for scaled predictions")
+        print("[OK] CatBoost Regressor detected")
+        print("[OK] System ready for predictions")
     else:
-        print(f"✅ Model type: {model_type}")
-        print("✅ System ready for predictions")
+        print(f"[OK] Model type: {model_type}")
+        print("[OK] System ready for predictions")
     
-    print("✅ Complete ML pipeline loaded: Model + Scaler + Features")
+    print("[OK] Complete ML pipeline loaded: Model + Features (no scaler needed)")
 
 except Exception as e:
-    print(f"❌ Error loading ML components: {e}")
+    print(f"[ERROR] Error loading ML components: {e}")
     print("Please make sure these files are in the project directory:")
-    print("- random_forest_model.pkl")
-    print("- scaler.pkl") 
+    print("- XGBoost_model.pkl")
     print("- selected_features.pkl")
     model = None
     scaler = None
@@ -364,16 +365,15 @@ def predict():
     
     if request.method == 'POST':
         try:
-            # Check if model and scaler are loaded
-            if model is None or scaler is None:
-                flash('Error: Random Forest model or scaler is not loaded. Please check server logs.')
+            # Check if model is loaded (no scaler needed for XGBoost)
+            if model is None:
+                flash('Error: XGBoost model is not loaded. Please check server logs.')
                 return render_template('predict.html')
             
             # Get and validate form data
             year = int(request.form['year'])
             engine_size = float(request.form['engine_size'])
             tax = float(request.form['tax'])
-            model_type = int(request.form['model'])
             mileage = int(request.form['mileage'])
             mpg = float(request.form['mpg'])
             transmission_manual = int(request.form['transmission_manual'])
@@ -392,10 +392,6 @@ def predict():
             
             if not (0 <= tax <= 1000):
                 flash('Tax must be between 0 and 1000')
-                return render_template('predict.html')
-            
-            if not (1 <= model_type <= 7):
-                flash('Invalid model type selected')
                 return render_template('predict.html')
             
             if not (0 <= mileage <= 500000):
@@ -424,34 +420,33 @@ def predict():
             for warning in warnings:
                 flash(f'⚠️ Warning: {warning}', 'warning')
             
-            # Prepare data using the correct pipeline: DataFrame -> Scale -> Predict
-            print(f"🔍 Raw inputs: year={year}, engine={engine_size}, tax={tax}, model={model_type}, mileage={mileage}, mpg={mpg}, trans={transmission_manual}")
+            # Prepare data for XGBoost prediction (no scaling needed)
+            print(f"[DEBUG] Raw inputs: year={year}, engine={engine_size}, tax={tax}, mileage={mileage}, mpg={mpg}, trans={transmission_manual}")
             
-            # Create DataFrame with exact feature names and order from training
-            input_data = pd.DataFrame([{
+            # Create DataFrame with only the features used by XGBoost model
+            input_features_data = {
                 'year': year,
                 'engineSize': engine_size,
                 'tax': tax,
-                'model': model_type,
                 'mileage': mileage,
                 'mpg': mpg,
                 'transmission_Manual': transmission_manual
-            }])
+            }
             
-            # Ensure features are in the correct order
+            # Create DataFrame and ensure correct feature order from training
+            input_data = pd.DataFrame([input_features_data])
             input_data = input_data[selected_features]
-            print(f"🔍 DataFrame input: {input_data.values[0]}")
-            print(f"🔍 Feature order: {list(input_data.columns)}")
+            print(f"[DEBUG] DataFrame input: {input_data.values[0]}")
+            print(f"[DEBUG] Feature order: {list(input_data.columns)}")
+            print(f"[DEBUG] Selected features from training: {selected_features}")
             
-            # Scale the input data using the same scaler from training
-            input_scaled = scaler.transform(input_data)
-            print(f"🔍 Scaled input: {input_scaled[0]}")
-            
-            # Make prediction with Random Forest model
-            predicted_price = model.predict(input_scaled)[0]
+            # Make prediction with XGBoost (no scaling needed)
+            predicted_price = model.predict(input_data)[0]
+            # Convert numpy.float32 to Python float for MongoDB compatibility
+            predicted_price = float(predicted_price)
             predicted_price = round(predicted_price, 2)
             
-            print(f"✅ Prediction Result: ${predicted_price}")  # Debug log
+            print(f"[OK] Prediction Result: ${predicted_price}")  # Debug log
             
             # Validate prediction result
             if predicted_price <= 0:
@@ -462,14 +457,13 @@ def predict():
                 flash('Warning: Predicted price seems unusually high. Please verify your inputs.')
                 # Continue anyway, but show warning
             
-            # Save prediction to database
+            # Save prediction to database (no model_type since it's not used)
             prediction_data = {
                 'user_id': session['user_id'],
                 'username': session['username'],
                 'year': year,
                 'engine_size': engine_size,
                 'tax': tax,
-                'model': model_type,
                 'mileage': mileage,
                 'mpg': mpg,
                 'transmission_manual': transmission_manual,
@@ -479,7 +473,7 @@ def predict():
             
             predictions_collection.insert_one(prediction_data)
             
-            return render_template('predict.html', 
+            return render_template('predict.html',
                                  predicted_price=predicted_price,
                                  form_data=request.form)
             
@@ -847,14 +841,15 @@ def test_model():
         return redirect(url_for('login'))
     
     try:
-        if model is None or scaler is None:
+        if model is None:
             return jsonify({
                 'success': False, 
-                'message': 'Random Forest model or scaler is not loaded'
+                'message': 'Model is not loaded'
             })
         
-        # Test prediction with sample data (2020 Fiesta)
-        test_df = pd.DataFrame([{
+        # Test prediction with sample data (2020 car)
+        # Create all possible features first
+        all_test_features = {
             'year': 2020,
             'engineSize': 1.5,
             'tax': 150,
@@ -862,27 +857,23 @@ def test_model():
             'mileage': 12000,
             'mpg': 50.0,
             'transmission_Manual': 1
-        }])
+        }
         
-        # Ensure correct feature order and scale
+        test_df = pd.DataFrame([all_test_features])
+        
+        # Filter to only selected features (excludes 'model' if not in selected_features)
         test_df = test_df[selected_features]
-        test_scaled = scaler.transform(test_df)
-        prediction = model.predict(test_scaled)[0]
+        prediction = model.predict(test_df)[0]
+        # Convert numpy.float32 to Python float for JSON serialization
+        prediction = float(prediction)
         
         return jsonify({
             'success': True,
             'model_type': type(model).__name__,
-            'test_input': {
-                'year': 2020,
-                'engineSize': 1.5,
-                'tax': 150,
-                'model': 5,
-                'mileage': 12000,
-                'mpg': 50.0,
-                'transmission_Manual': 1
-            },
+            'selected_features': selected_features,
+            'test_input_filtered': test_df.iloc[0].to_dict(),
             'predicted_price': round(prediction, 2),
-            'message': 'Model is working correctly!'
+            'message': 'XGBoost model is working correctly with selected features!'
         })
         
     except Exception as e:

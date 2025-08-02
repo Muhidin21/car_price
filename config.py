@@ -17,9 +17,9 @@ class Config:
     USERS_COLLECTION = 'users'
     PREDICTIONS_COLLECTION = 'predictions'
     
-    # Model Configuration - Using Random Forest
-    MODEL_PATH = 'random_forest_model.pkl'
-    SCALER_PATH = 'scaler.pkl'
+    # Model Configuration - Using XGBoost
+    MODEL_PATH = 'XGBoost_model.pkl'
+    SCALER_PATH = 'scaler.pkl'  # Not used for XGBoost but kept for compatibility
     FEATURES_PATH = 'selected_features.pkl'
     
     # Email Configuration for OTP

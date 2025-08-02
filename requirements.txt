@@ -10,3 +10,4 @@ python-dotenv>=1.0.0
 dnspython>=2.4.0
 setuptools>=65.0.0
 Flask-Mail>=0.9.1
+xgboost>=1.7.0
