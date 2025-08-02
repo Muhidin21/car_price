@@ -93,9 +93,18 @@
                                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200">
+<tbody class="divide-y divide-gray-200" id="predictionsBody">
                             {% for prediction in predictions[:10] %}
-                            <tr class="hover:bg-gray-50">
+                            <tr class="hover:bg-gray-50"
+                                data-id="{{ prediction._id }}"
+                                data-created="{{ prediction.created_at.strftime('%Y-%m-%d %H:%M') if prediction.created_at else '' }}"
+                                data-year="{{ prediction.year }}"
+                                data-engine="{{ prediction.engine_size }}"
+                                data-mpg="{{ prediction.mpg }}"
+                                data-mileage="{{ prediction.mileage }}"
+                                data-tax="{{ prediction.tax }}"
+                                data-trans="{{ 1 if prediction.transmission_manual == 1 else 0 }}"
+                                data-price="{{ prediction.predicted_price }}">
                                 <td class="px-4 py-4 text-sm text-gray-600">
                                     {{ prediction.created_at.strftime('%Y-%m-%d') }}<br>
                                     <span class="text-xs text-gray-400">{{ prediction.created_at.strftime('%H:%M') }}</span>
@@ -118,7 +127,7 @@
                                     </div>
                                 </td>
                                 <td class="px-4 py-4">
-                                    <button onclick="viewDetails('{{ prediction._id }}')" 
+                                    <button onclick="viewDetails(this)" 
                                             class="text-[#1e90ff] hover:text-blue-800 text-sm">
                                         <i class="fas fa-eye mr-1"></i>View
                                     </button>
@@ -131,9 +140,11 @@
 
                 {% if predictions|length > 10 %}
                     <div class="mt-6 text-center">
-                        <button onclick="loadMorePredictions()" 
+                        <button id="loadMoreBtn"
+                                onclick="loadMorePredictions()" 
                                 class="bg-[#1e90ff] hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
-                            <i class="fas fa-chevron-down mr-2"></i>Load More
+                            <i class="fas fa-chevron-down mr-2"></i>
+                            <span>Load More</span>
                         </button>
                     </div>
                 {% endif %}
@@ -161,7 +172,7 @@
             <canvas id="predictionChart" width="400" height="200"></canvas>
         </div>
     </div>
-    {% endif %}
+{% endif %}
 </div>
 
 <!-- Prediction Details Modal -->
@@ -182,13 +193,37 @@
 </div>
 
 <script>
-function viewDetails(predictionId) {
-    // Show modal with prediction details
-    document.getElementById('predictionModal').classList.remove('hidden');
-    // In a real app, you'd fetch details via AJAX
-    document.getElementById('predictionDetails').innerHTML = `
-        <p class="text-gray-600">Loading prediction details...</p>
+// View details using data-* attributes
+function viewDetails(buttonEl) {
+    const tr = buttonEl.closest('tr');
+    if (!tr) return;
+    const get = (name, def='') => tr.getAttribute(name) ?? def;
+    const created = get('data-created');
+    const year = get('data-year');
+    const engine = get('data-engine');
+    const mpg = get('data-mpg');
+    const mileage = Number(get('data-mileage', 0)).toLocaleString();
+    const tax = get('data-tax');
+    const trans = get('data-trans') === '1' ? 'Manual' : 'Automatic';
+    const price = Number(get('data-price', 0)).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+
+    const details = document.getElementById('predictionDetails');
+    const modal = document.getElementById('predictionModal');
+    if (!details || !modal) return;
+
+    details.innerHTML = `
+        <div class="space-y-2 text-sm text-gray-700">
+            <div><span class="font-semibold">Date:</span> ${created}</div>
+            <div><span class="font-semibold">Year:</span> ${year}</div>
+            <div><span class="font-semibold">Engine Size:</span> ${engine} L</div>
+            <div><span class="font-semibold">MPG:</span> ${mpg}</div>
+            <div><span class="font-semibold">Mileage:</span> ${mileage} miles</div>
+            <div><span class="font-semibold">Tax:</span> $${tax}</div>
+            <div><span class="font-semibold">Transmission:</span> ${trans}</div>
+            <div><span class="font-semibold">Predicted Price:</span> $${price}</div>
+        </div>
     `;
+    modal.classList.remove('hidden');
 }
 
 function closePredictionModal() {
@@ -196,60 +231,71 @@ function closePredictionModal() {
 }
 
 function exportPredictions() {
-    // In a real app, this would generate and download a CSV/PDF
-    alert('Export functionality would be implemented here');
+    window.location.href = "{{ url_for('user_export_predictions') }}";
 }
 
-function loadMorePredictions() {
-    // In a real app, this would load more predictions via AJAX
-    alert('Load more functionality would be implemented here');
+// Load more by requesting server-rendered rows (simple approach)
+const pageSize = 10;
+// Read initial count from DOM to avoid JS parsing issues with inline Jinja
+let loadedCount = (function() {
+    const tbody = document.getElementById('predictionsBody');
+    if (!tbody) return 0;
+    // number of initially rendered rows
+    return tbody.querySelectorAll('tr').length;
+})();
+
+// Helper: build a unique key per row (combining id and created timestamp if present)
+function rowKeyFromTr(tr) {
+    const id = tr.getAttribute('data-id') || '';
+    const created = tr.getAttribute('data-created') || '';
+    return `${id}__${created}`;
 }
 
-// Simple chart if predictions exist
-{% if predictions %}
-document.addEventListener('DOMContentLoaded', function() {
-    const canvas = document.getElementById('predictionChart');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+// Maintain a Set of already rendered row keys to prevent duplicates
+const renderedKeys = new Set();
+// Seed the set with the initially rendered rows
+(function seedRenderedKeys() {
+    const existing = document.querySelectorAll('#predictionsBody tr[data-id]');
+    existing.forEach(tr => renderedKeys.add(rowKeyFromTr(tr)));
+})();
 
-    // Data from server (ensure valid JS via Jinja)
-    const dates = [{% for p in predictions[-7:] %}'{{ p.created_at.strftime("%m/%d") }}'{% if not loop.last %},{% endif %}{% endfor %}];
-    const prices = [{% for p in predictions[-7:] %}{{ p.predicted_price|float }}{% if not loop.last %},{% endif %}{% endfor %}];
+async function loadMorePredictions() {
+    const btn = document.getElementById('loadMoreBtn');
+    if (btn) { btn.disabled = true; btn.classList.add('opacity-60','cursor-not-allowed'); }
 
-    // Simple line chart drawing
-    ctx.beginPath();
-    ctx.strokeStyle = '#1e90ff';
-    ctx.lineWidth = 2;
+    try {
+        const res = await fetch(`{{ url_for('user_dashboard') }}?partial=1&skip=${loadedCount}&limit=${pageSize}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        if (!res.ok) throw new Error('Failed to load more');
+        const html = await res.text();
+        const temp = document.createElement('tbody');
+        temp.innerHTML = html;
+        const rows = Array.from(temp.querySelectorAll('tr'));
 
-    const width = ctx.canvas.width;
-    const height = ctx.canvas.height;
-    const maxPrice = Math.max.apply(null, prices);
-    const minPrice = Math.min.apply(null, prices);
-    const priceRange = (maxPrice - minPrice) || 1;
+        const tbody = document.getElementById('predictionsBody');
+        let appended = 0;
+        rows.forEach(r => {
+            // compute key for fetched row
+            const key = rowKeyFromTr(r);
+            if (!renderedKeys.has(key)) {
+                renderedKeys.add(key);
+                tbody.appendChild(r);
+                appended += 1;
+            }
+        });
+        // Only increase loadedCount by the number the server attempted to provide (rows.length)
+        // This preserves pagination even if we filtered duplicates client-side.
+        loadedCount += rows.length;
 
-    for (let i = 0; i < prices.length; i++) {
-        const x = (i / (prices.length - 1)) * width;
-        const y = height - ((prices[i] - minPrice) / priceRange) * height;
-
-        if (i === 0) {
-            ctx.moveTo(x, y);
-        } else {
-            ctx.lineTo(x, y);
+        if ((rows.length < pageSize || appended === 0) && btn) {
+            btn.querySelector('span').textContent = 'No more items';
+        } else if (btn) {
+            btn.disabled = false; btn.classList.remove('opacity-60','cursor-not-allowed');
         }
+    } catch (e) {
+        console.error(e);
+        if (btn) { btn.disabled = false; btn.classList.remove('opacity-60','cursor-not-allowed'); }
+        alert('Failed to load more predictions.');
     }
-
-    ctx.stroke();
-
-    // Add labels
-    ctx.fillStyle = '#6B7280';
-    ctx.font = '12px Arial';
-    ctx.textAlign = 'center';
-
-    for (let i = 0; i < dates.length; i++) {
-        const x = (i / (dates.length - 1)) * width;
-        ctx.fillText(dates[i], x, height - 5);
-    }
-});
-{% endif %}
+}
 </script>
 {% endblock %}

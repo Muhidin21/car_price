@@ -155,10 +155,10 @@
                                     <th class="px-4 py-3">Email</th>
                                     <th class="px-4 py-3">Joined</th>
                                     <th class="px-4 py-3">Predictions</th>
-                                    <th class="px-4 py-3">Actions</th>
+<th class="px-4 py-3">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="usersBody">
+<tbody id="usersBody">
                                 <tr>
                                     <td colspan="5" class="px-4 py-6 text-center text-gray-500">Loading users...</td>
                                 </tr>
@@ -272,18 +272,21 @@ function loadUsersIntoTable(users) {
         const joined = user.created_at ? new Date(user.created_at).toLocaleDateString() : '-';
         // Use MongoDB ObjectId string exactly as provided by backend.
         const oid = (user._id ?? user.id ?? '').toString();
-        html += `
+html += `
             <tr class="border-b hover:bg-blue-50 cursor-pointer" data-user-id="${oid}" onclick="viewUserRow(this)">
                 <td class="px-4 py-3 font-medium text-gray-800">${user.username}</td>
                 <td class="px-4 py-3">${user.email}</td>
                 <td class="px-4 py-3">${joined}</td>
                 <td class="px-4 py-3">${(user.prediction_count ?? user.predictions ?? user.count ?? 0)}</td>
-                <td class="px-4 py-3">
-                    <button onclick="event.stopPropagation(); deleteUser('${oid}', '${user.username}')" class="text-red-600 hover:text-red-800 text-sm">
+                <td class="px-4 py-3 space-x-2">
+                    <button onclick="event.stopPropagation(); openUpdateUser('${oid}', '${user.username}', '${user.email}')" class="text-blue-600 hover:text-blue-800 text-sm">
+                        <i class="fas fa-edit mr-1"></i>Update
+                    </button>
+                    <button onclick="event.stopPropagation(); confirmAndDeleteUser('${oid}', '${user.username}')" class="text-red-600 hover:text-red-800 text-sm">
                         <i class="fas fa-trash mr-1"></i>Delete
                     </button>
                 </td>
-            </tr>`;
+            </tr>`; 
     });
     tbody.innerHTML = html;
     if (count) count.textContent = users.length;
@@ -330,6 +333,76 @@ function viewUserRow(trEl) {
     viewUserDetails(id);
 }
 
+function openUpdateUser(userId, username, email) {
+    const container = document.getElementById('userDetailCard');
+    if (!container) return;
+    container.innerHTML = `
+        <div class="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-11/12 md:w-[720px] border border-gray-200 rounded-xl p-5 bg-white shadow-xl">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    <i class="fas fa-user-edit mr-2 text-[#1e90ff]"></i>Update User
+                </h3>
+                <button class="text-gray-400 hover:text-gray-600" onclick="closeUserCard()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form onsubmit="submitUpdateUser(event, '${userId}')">
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-sm text-gray-600 mb-1 block">Username</label>
+                        <input id="upd_username" type="text" class="w-full border border-gray-300 rounded-md px-3 py-2" value="${username || ''}" required>
+                    </div>
+                    <div>
+                        <label class="text-sm text-gray-600 mb-1 block">Email</label>
+                        <input id="upd_email" type="email" class="w-full border border-gray-300 rounded-md px-3 py-2 break-all" value="${email || ''}" required>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="text-sm text-gray-600 mb-1 block">Role</label>
+                        <select id="upd_role" class="w-full border border-gray-300 rounded-md px-3 py-2">
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center justify-end space-x-2">
+                    <button type="button" onclick="closeUserCard()" class="inline-flex items-center rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-200 transition">Cancel</button>
+                    <button type="submit" class="inline-flex items-center rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 transition">
+                        <i class="fas fa-save mr-2"></i>Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+}
+
+async function submitUpdateUser(e, userId) {
+    e.preventDefault();
+    const username = document.getElementById('upd_username')?.value?.trim();
+    const email = document.getElementById('upd_email')?.value?.trim();
+    const role = document.getElementById('upd_role')?.value || 'user';
+    if (!username || !email) {
+        showMessageCard('error', 'Username and Email are required');
+        return;
+    }
+    try {
+        const res = await fetch(`/admin/user/${userId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, email, role })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showMessageCard('success', 'User updated successfully');
+            closeUserCard();
+            fetchAllUsers();
+        } else {
+            showMessageCard('error', 'Error updating user: ' + (data.message || 'Unknown error'));
+        }
+    } catch (err) {
+        showMessageCard('error', 'Network error updating user');
+    }
+}
+
 function viewUserDetails(userId) {
     // Use ObjectId string directly (backend expects MongoDB ObjectId).
     const id = String(userId);
@@ -372,7 +445,7 @@ function viewUserDetails(userId) {
                             </div>
                         </div>
                         <div class="mt-4 flex items-center justify-end space-x-2">
-                            <button onclick="deleteUser('${u._id}', '${u.username}')" class="inline-flex items-center rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-black transition">
+                            <button onclick="confirmAndDeleteUser('${u._id}', '${u.username}')" class="inline-flex items-center rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-black transition">
                                 <i class="fas fa-trash mr-2"></i>Delete User
                             </button>
                             <button onclick="closeUserCard()" class="inline-flex items-center rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-200 transition">Close</button>
@@ -402,27 +475,95 @@ function viewUserDetails(userId) {
         });
 }
 
-function deleteUser(userId, username) {
-    if (confirm(`Are you sure you want to delete user "${username}"? This action cannot be undone.`)) {
-        fetch(`/admin/user/${userId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('User deleted successfully');
-                viewAllUsers(); // Refresh the user list
-            } else {
-                alert('Error deleting user: ' + data.message);
-            }
-        })
-        .catch(error => {
-            alert('Error deleting user');
-        });
+function showMessageCard(type, message) {
+    // type: 'success' | 'error' | 'info'
+    const existing = document.getElementById('adminMessageCard');
+    if (existing) existing.remove();
+    const bg = type === 'success' ? 'bg-green-50 border-green-200 text-green-800'
+             : type === 'error' ? 'bg-red-50 border-red-200 text-red-800'
+             : 'bg-blue-50 border-blue-200 text-blue-800';
+    const icon = type === 'success' ? 'fa-check-circle'
+               : type === 'error' ? 'fa-exclamation-triangle'
+               : 'fa-info-circle';
+    const wrapper = document.createElement('div');
+    wrapper.id = 'adminMessageCard';
+    wrapper.innerHTML = `
+        <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-40">
+            <div class="w-11/12 md:w-[520px] border rounded-xl p-5 shadow-2xl ${bg}">
+                <div class="flex items-start justify-between">
+                    <div class="flex items-start space-x-3">
+                        <i class="fas ${icon} mt-1"></i>
+                        <div class="text-sm">${message}</div>
+                    </div>
+                    <button class="ml-3 text-gray-500 hover:text-gray-700" onclick="document.getElementById('adminMessageCard')?.remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(wrapper);
+    // Auto-dismiss after 3s for success/info
+    if (type !== 'error') {
+        setTimeout(() => document.getElementById('adminMessageCard')?.remove(), 3000);
     }
+}
+
+function confirmAndDeleteUser(userId, username) {
+    // Custom confirmation component (no native confirm)
+    const existing = document.getElementById('adminConfirmCard');
+    if (existing) existing.remove();
+
+    const wrapper = document.createElement('div');
+    wrapper.id = 'adminConfirmCard';
+    wrapper.innerHTML = `
+        <div class="fixed inset-0 z-[70] flex items-center justify-center bg-black bg-opacity-40">
+            <div class="w-11/12 md:w-[520px] border border-gray-200 rounded-xl p-5 bg-white shadow-2xl">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-lg font-semibold text-gray-800">
+                        <i class="fas fa-user-times mr-2 text-red-600"></i>Delete User
+                    </h3>
+                    <button class="text-gray-400 hover:text-gray-600" onclick="document.getElementById('adminConfirmCard')?.remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="text-sm text-gray-700 mb-4">
+                    Are you sure you want to delete user "<span class="font-semibold">${username}</span>"? This action cannot be undone.
+                </div>
+                <div class="flex items-center justify-end space-x-2">
+                    <button class="inline-flex items-center rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-200 transition" onclick="document.getElementById('adminConfirmCard')?.remove()">Cancel</button>
+                    <button class="inline-flex items-center rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 transition" onclick="performDeleteUser('${userId}')">
+                        <i class="fas fa-trash mr-2"></i>Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(wrapper);
+}
+
+function performDeleteUser(userId) {
+    const card = document.getElementById('adminConfirmCard');
+    if (card) card.querySelectorAll('button').forEach(b => b.disabled = true);
+
+    fetch(`/admin/user/${userId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('adminConfirmCard')?.remove();
+        if (data.success) {
+            showMessageCard('success', 'User deleted successfully');
+            fetchAllUsers();
+        } else {
+            showMessageCard('error', 'Error deleting user: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(() => {
+        document.getElementById('adminConfirmCard')?.remove();
+        showMessageCard('error', 'Error deleting user');
+    });
 }
 
 function exportUsers() {
@@ -486,7 +627,7 @@ function renderPredictions(items) {
                 <td class="px-4 py-3 text-sm text-gray-700">${spec}</td>
                 <td class="px-4 py-3 font-semibold text-green-700">$${(p.predicted_price ?? 0).toFixed(2)}</td>
                 <td class="px-4 py-3 space-x-2">
-                    <button class="text-red-600 hover:text-red-800 text-sm" onclick="deletePrediction('${p._id}')"><i class="fas fa-trash mr-1"></i>Delete</button>
+                    <button class="text-red-600 hover:text-red-800 text-sm" onclick="confirmAndDeletePrediction('${p._id}')"><i class="fas fa-trash mr-1"></i>Delete</button>
                     <button class="text-gray-700 hover:text-black text-sm" onclick="viewPredictionDetail('${p._id}')"><i class="fas fa-eye mr-1"></i>View</button>
                 </td>
             </tr>`;
@@ -516,18 +657,58 @@ function nextPredPage() {
     loadPredictions(predPage);
 }
 
-function deletePrediction(id) {
-    if (!confirm('Delete this prediction?')) return;
+function confirmAndDeletePrediction(id) {
+    // Custom confirmation modal for prediction deletion
+    const existing = document.getElementById('adminConfirmCard');
+    if (existing) existing.remove();
+
+    const wrapper = document.createElement('div');
+    wrapper.id = 'adminConfirmCard';
+    wrapper.innerHTML = `
+        <div class="fixed inset-0 z-[70] flex items-center justify-center bg-black bg-opacity-40">
+            <div class="w-11/12 md:w-[520px] border border-gray-200 rounded-xl p-5 bg-white shadow-2xl">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-lg font-semibold text-gray-800">
+                        <i class="fas fa-trash mr-2 text-red-600"></i>Delete Prediction
+                    </h3>
+                    <button class="text-gray-400 hover:text-gray-600" onclick="document.getElementById('adminConfirmCard')?.remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="text-sm text-gray-700 mb-4">
+                    Are you sure you want to delete this prediction? This action cannot be undone.
+                </div>
+                <div class="flex items-center justify-end space-x-2">
+                    <button class="inline-flex items-center rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-200 transition" onclick="document.getElementById('adminConfirmCard')?.remove()">Cancel</button>
+                    <button class="inline-flex items-center rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 transition" onclick="performDeletePrediction('${id}')">
+                        <i class="fas fa-trash mr-2"></i>Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(wrapper);
+}
+
+function performDeletePrediction(id) {
+    const card = document.getElementById('adminConfirmCard');
+    if (card) card.querySelectorAll('button').forEach(b => b.disabled = true);
+
     fetch(`/admin/predictions/${id}`, { method: 'DELETE' })
         .then(r => r.json())
         .then(data => {
+            document.getElementById('adminConfirmCard')?.remove();
             if (data.success) {
+                showMessageCard('success', 'Prediction deleted successfully');
                 loadPredictions(predPage);
             } else {
-                alert('Error deleting prediction: ' + (data.message || 'Unknown error'));
+                showMessageCard('error', 'Error deleting prediction: ' + (data.message || 'Unknown error'));
             }
         })
-        .catch(() => alert('Error deleting prediction'));
+        .catch(() => {
+            document.getElementById('adminConfirmCard')?.remove();
+            showMessageCard('error', 'Error deleting prediction');
+        });
 }
 
 function viewPredictionDetail(id) {
@@ -584,18 +765,19 @@ function exportReports() {
 }
 
 function testModel() {
-    // Test the CatBoost model
+    // Test the model and show result in a centered message card (no alert)
     fetch('/test_model')
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert(`✅ Model Test Successful!\n\nModel Type: ${data.model_type}\nTest Input: 2020 Fiesta, 1.5L, Manual\nPredicted Price: $${data.predicted_price}\n\n${data.message}`);
+                const msg = `Model Type: ${data.model_type}<br/>Predicted Price: $${data.predicted_price}<br/>${data.message}`;
+                showMessageCard('success', msg);
             } else {
-                alert(`❌ Model Test Failed!\n\n${data.message}`);
+                showMessageCard('error', data.message || 'Model test failed');
             }
         })
-        .catch(error => {
-            alert('❌ Error testing model: ' + error);
+        .catch(err => {
+            showMessageCard('error', 'Error testing model: ' + err);
         });
 }
 

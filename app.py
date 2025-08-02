@@ -343,6 +343,55 @@ def user_dashboard():
     
     return render_template('user_dashboard.html', predictions=user_predictions)
 
+@app.route('/user/export/predictions')
+def user_export_predictions():
+    """Export the logged-in user's predictions as a CSV."""
+    if 'user_id' not in session or session.get('role') != 'user':
+        return redirect(url_for('login'))
+    try:
+        import csv
+        from io import StringIO
+        from flask import make_response
+
+        # Fetch only current user's predictions, newest first
+        user_id = session['user_id']
+        preds = list(predictions_collection.find({'user_id': user_id}).sort('created_at', -1))
+
+        # Build CSV
+        output = StringIO()
+        writer = csv.writer(output)
+        writer.writerow([
+            'Date', 'Username', 'Year', 'Engine Size', 'Tax', 'Mileage',
+            'MPG', 'Transmission', 'Predicted Price'
+        ])
+        for p in preds:
+            created = p.get('created_at')
+            if isinstance(created, datetime):
+                created_str = created.strftime('%Y-%m-%d %H:%M')
+            else:
+                created_str = str(created) if created else ''
+            writer.writerow([
+                created_str,
+                p.get('username', ''),
+                p.get('year', ''),
+                p.get('engine_size', ''),
+                p.get('tax', ''),
+                p.get('mileage', ''),
+                p.get('mpg', ''),
+                'Manual' if p.get('transmission_manual', 0) == 1 else 'Automatic',
+                f"{float(p.get('predicted_price', 0)):.2f}"
+            ])
+
+        response = make_response(output.getvalue())
+        response.headers['Content-Type'] = 'text/csv'
+        # Include username in filename for clarity
+        safe_username = session.get('username', 'user').replace(' ', '_')
+        response.headers['Content-Disposition'] = f'attachment; filename={safe_username}_predictions.csv'
+        return response
+    except Exception as e:
+        flash(f'Error exporting predictions: {str(e)}')
+        return redirect(url_for('user_dashboard'))
+
 @app.route('/admin_dashboard')
 def admin_dashboard():
     if 'user_id' not in session or session.get('role') != 'admin':
@@ -561,6 +610,74 @@ def admin_get_user(user_id):
 
         return jsonify({'success': True, 'user': user})
 
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/admin/user/<user_id>', methods=['PUT'])
+def admin_update_user(user_id):
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+    try:
+        # Validate ObjectId
+        try:
+            oid = ObjectId(user_id)
+        except Exception:
+            return jsonify({'success': False, 'message': 'Invalid user id format'}), 400
+
+        payload = request.get_json(silent=True) or {}
+        updates = {}
+
+        # Sanitize and validate fields
+        new_username = payload.get('username')
+        new_email = payload.get('email')
+        new_role = payload.get('role')
+
+        if new_username:
+            # Ensure username is unique (case sensitive)
+            existing = users_collection.find_one({'username': new_username, '_id': {'$ne': oid}})
+            if existing:
+                return jsonify({'success': False, 'message': 'Username already taken'}), 400
+            updates['username'] = new_username
+
+        if new_email:
+            # Admin update: relax domain allowlist but still validate basic format and uniqueness
+            import re
+            email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+            if not re.match(email_pattern, new_email or ''):
+                return jsonify({'success': False, 'message': 'Invalid email format'}), 400
+            # Ensure email is unique
+            existing_email = users_collection.find_one({'email': new_email, '_id': {'$ne': oid}})
+            if existing_email:
+                return jsonify({'success': False, 'message': 'Email already in use'}), 400
+            updates['email'] = new_email
+
+        if new_role:
+            if new_role not in ['user', 'admin']:
+                return jsonify({'success': False, 'message': 'Invalid role'}), 400
+            updates['role'] = new_role
+
+        if not updates:
+            return jsonify({'success': False, 'message': 'No valid fields to update'}), 400
+
+        # Apply updates
+        result = users_collection.update_one({'_id': oid}, {'$set': updates})
+        if result.matched_count == 0:
+            return jsonify({'success': False, 'message': 'User not found'}), 404
+
+        # If username updated, reflect in predictions documents that store username string
+        if 'username' in updates:
+            predictions_collection.update_many({'user_id': str(oid)}, {'$set': {'username': updates['username']}})
+
+        # Build fresh view
+        user_doc = users_collection.find_one({'_id': oid}, {'username': 1, 'email': 1, 'role': 1, 'created_at': 1})
+        user = {
+            '_id': str(user_doc['_id']),
+            'username': user_doc.get('username'),
+            'email': user_doc.get('email'),
+            'role': user_doc.get('role', 'user'),
+            'created_at': user_doc.get('created_at').isoformat() if user_doc.get('created_at') else None
+        }
+        return jsonify({'success': True, 'message': 'User updated', 'user': user})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
