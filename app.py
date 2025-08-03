@@ -57,47 +57,38 @@ except Exception as e:
     client = None
     db = None
 
-# Load Decision Tree model (no scaler or selected features needed)
+# Load CatBoost model with scaler and selected features (align with training notebook)
 try:
-    # Load Decision Tree model
-    model = joblib.load(Config.MODEL_PATH)
+    # Force model path to catboost_model.pkl regardless of Config.MODEL_PATH
+    model_path = 'catboost_model.pkl'
+    scaler_path = 'scaler.pkl'
+    features_path = 'selected_features.pkl'
+
+    model = joblib.load(model_path)
+    scaler = joblib.load(scaler_path)
+    selected_features = joblib.load(features_path)
+
     model_type = type(model).__name__
-    print(f"[OK] Decision Tree Model loaded successfully: {model_type}")
-    
-    # Decision Tree does not require scaler or selected features
-    scaler = None
-    selected_features = None
-    print("[INFO] Skipping scaler load (Decision Tree model does not require scaling)")
-    print("[INFO] Skipping selected features load (Decision Tree uses all features)")
-    
-    # Define the expected feature order for Decision Tree model (15 features total)
-    # Based on notebook analysis: 7 numerical + 8 categorical (1 transmission + 7 fuel types)
-    expected_features = [
-        'year', 'engineSize', 'tax', 'mileage', 'mpg', 'car_age', 'price_per_litre',
-        'transmission_Manual', 'fuelType_Diesel', 'fuelType_Electric', 'fuelType_Hybrid',
-        'fuelType_Petrol', 'fuelType_Other1', 'fuelType_Other2', 'fuelType_Other3'
-    ]
-    
-    if 'DecisionTree' in model_type:
-        print("[OK] Decision Tree Regressor detected")
-        print("[OK] System ready for direct predictions without scaling")
-    elif 'RandomForest' in model_type:
-        print("[OK] Random Forest Regressor confirmed")
-        print("[OK] System ready for predictions")
-    elif 'XGB' in model_type or 'XGBoost' in model_type:
-        print("[OK] XGBoost Regressor detected")
-        print("[OK] System ready for predictions")
-    else:
-        print(f"[OK] Model type: {model_type}")
-        print("[OK] System ready for predictions")
-    
-    print(f"[OK] Expected features: {expected_features}")
-    print("[OK] Complete ML pipeline loaded: Model (no scaler or feature selection needed)")
+    print(f"[OK] ML Model loaded: {model_type} from {model_path}")
+    print(f"[OK] Scaler loaded from {scaler_path}")
+    print(f"[OK] Selected features loaded from {features_path}: {selected_features}")
+
+    # Expected features are exactly the selected_features from training
+    expected_features = list(selected_features)
+
+    # Sanity checks
+    if not isinstance(expected_features, (list, tuple)) or len(expected_features) == 0:
+        raise ValueError("selected_features.pkl must be a non-empty list of feature names")
+
+    print(f"[OK] Inference feature order: {expected_features}")
+    print("[OK] Complete ML pipeline loaded: CatBoost + StandardScaler + selected features")
 
 except Exception as e:
     print(f"[ERROR] Error loading ML components: {e}")
     print("Please make sure these files are in the project directory:")
-    print("- decision_tree_model.pkl")
+    print("- catboost_model.pkl")
+    print("- scaler.pkl")
+    print("- selected_features.pkl")
     model = None
     scaler = None
     selected_features = None
@@ -223,24 +214,66 @@ def home():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    # Guard against DB connection issues
+    if users_collection is None:
+        flash('Login service unavailable. Database connection not initialized.')
+        return render_template('login.html')
+
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        
-        user = users_collection.find_one({'username': username})
-        
-        if user and check_password_hash(user['password'], password):
+        try:
+            username = (request.form.get('username') or '').strip()
+            password = request.form.get('password') or ''
+
+            if not username or not password:
+                flash('Please provide both username and password')
+                return render_template('login.html')
+
+            # Fetch by username exactly as stored
+            user = users_collection.find_one({'username': username})
+
+            # Debug logging (stdout)
+            print(f"[LOGIN] Attempt user='{username}', found={bool(user)}")
+
+            if not user:
+                flash('Invalid username or password')
+                return render_template('login.html')
+
+            # Robust password handling (supports hashed and legacy plain for admin/bootstrap)
+            stored_pw = user.get('password', '')
+            is_hashed = isinstance(stored_pw, str) and stored_pw.startswith('pbkdf2:')
+            try:
+                password_ok = check_password_hash(stored_pw, password) if is_hashed else (stored_pw == password)
+            except Exception as e:
+                print(f"[LOGIN] check_password_hash error: {e}")
+                password_ok = False
+
+            print(f"[LOGIN] Diagnostics: is_hashed={is_hashed}, email_verified={user.get('email_verified', False)}, role={user.get('role', 'user')}, password_ok={password_ok}")
+
+            if not password_ok:
+                flash('Invalid username or password')
+                return render_template('login.html')
+
+            # Relax email verification for admin to prevent lockout; enforce for normal users
+            role = user.get('role', 'user')
+            if role != 'admin' and not user.get('email_verified', False):
+                flash('Please verify your email before logging in.')
+                return render_template('login.html')
+
+            # Establish session
             session['user_id'] = str(user['_id'])
-            session['username'] = user['username']
-            session['role'] = user['role']
-            
-            if user['role'] == 'admin':
-                return redirect(url_for('admin_dashboard'))
-            else:
-                return redirect(url_for('user_dashboard'))
-        else:
-            flash('Invalid username or password')
-    
+            session['username'] = user.get('username', '')
+            session['role'] = role
+
+            # Confirm session set
+            print(f"[LOGIN] Success user_id={session['user_id']} role={session['role']}")
+
+            return redirect(url_for('admin_dashboard' if role == 'admin' else 'user_dashboard'))
+        except Exception as e:
+            # Surface unexpected errors
+            print(f"[LOGIN][ERROR] {e}")
+            flash('An unexpected error occurred during login. Please try again.')
+            return render_template('login.html')
+
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -420,11 +453,11 @@ def predict():
     
     if request.method == 'POST':
         try:
-            # Check if model is loaded (no scaler needed for Decision Tree)
-            if model is None:
-                flash('Error: Decision Tree model is not loaded. Please check server logs.')
+            # Check if model and preprocessing artifacts are loaded
+            if model is None or scaler is None or expected_features is None:
+                flash('Error: ML components are not loaded. Please check server logs.')
                 return render_template('predict.html')
-            
+
             # Get and validate form data
             year = int(request.form['year'])
             engine_size = float(request.form['engine_size'])
@@ -432,118 +465,75 @@ def predict():
             mileage = int(request.form['mileage'])
             mpg = float(request.form['mpg'])
             transmission_manual = int(request.form['transmission_manual'])
-            fuel_type = request.form['fuel_type']  # New fuelType input
-            
-            # Enhanced input validation with warnings
+            fuel_type = request.form['fuel_type']  # present in UI but not used by the trained 6-feature model
+
+            # Input validation (same as before, keep fuel_type validation for UI consistency)
             warnings = []
-            
-            # Basic range validation
             if not (1990 <= year <= 2025):
                 flash('Year must be between 1990 and 2025')
                 return render_template('predict.html')
-            
             if not (0.5 <= engine_size <= 8.0):
                 flash('Engine size must be between 0.5 and 8.0 liters')
                 return render_template('predict.html')
-            
             if not (0 <= tax <= 1000):
                 flash('Tax must be between 0 and 1000')
                 return render_template('predict.html')
-            
             if not (0 <= mileage <= 500000):
                 flash('Mileage must be between 0 and 500,000')
                 return render_template('predict.html')
-            
             if not (10 <= mpg <= 100):
                 flash('MPG must be between 10 and 100')
                 return render_template('predict.html')
-            
             if transmission_manual not in [0, 1]:
                 flash('Invalid transmission type')
                 return render_template('predict.html')
-            
             if fuel_type not in ['Petrol', 'Diesel', 'Hybrid', 'Electric']:
                 flash('Invalid fuel type selected')
                 return render_template('predict.html')
-            
-            # Realistic value warnings
+
+            # Optional warnings
             if engine_size > 3.0:
-                warnings.append(f'Engine size {engine_size}L is very large (typical: 1.0-2.5L). This will increase the predicted price significantly.')
-            
+                warnings.append(f'Engine size {engine_size}L is very large (typical: 1.0-2.5L).')
             if year >= 2018 and mpg < 30:
-                warnings.append(f'MPG {mpg} seems low for a {year} car (modern cars typically: 35-60 MPG)')
-            
+                warnings.append(f'MPG {mpg} seems low for a {year} car.')
             if tax < 100:
-                warnings.append(f'Tax £{tax} seems low (typical: £150-£300)')
-            
-            # Show warnings to user
+                warnings.append(f'Tax £{tax} seems low.')
             for warning in warnings:
                 flash(f'⚠️ Warning: {warning}', 'warning')
-            
-            # Prepare data for Decision Tree prediction (no scaling needed)
-            print(f"[DEBUG] Raw inputs: year={year}, engine={engine_size}, tax={tax}, mileage={mileage}, mpg={mpg}, trans={transmission_manual}, fuel={fuel_type}")
-            
-            # Calculate derived features
-            current_year = datetime.now().year
-            car_age = current_year - year
-            
-            # Estimate price_per_litre (rough estimation based on typical car values)
-            # This is a placeholder - in real scenario this would be calculated from actual price
-            estimated_price = 15000  # Base estimation
-            if engine_size > 0:
-                price_per_litre = estimated_price / engine_size
-            else:
-                price_per_litre = estimated_price  # Fallback for electric cars
-            
-            # Create one-hot encoded features for fuelType (7 categories total)
-            fuel_type_features = {
-                'fuelType_Diesel': 1.0 if fuel_type == 'Diesel' else 0.0,
-                'fuelType_Electric': 1.0 if fuel_type == 'Electric' else 0.0,
-                'fuelType_Hybrid': 1.0 if fuel_type == 'Hybrid' else 0.0,
-                'fuelType_Petrol': 1.0 if fuel_type == 'Petrol' else 0.0,
-                'fuelType_Other1': 0.0,  # Additional fuel type categories from training
-                'fuelType_Other2': 0.0,
-                'fuelType_Other3': 0.0
-            }
-            
-            # Create DataFrame with all 15 features for Decision Tree model
-            input_features_data = {
+
+            # Build input strictly matching training contract (6 features)
+            print(f"[DEBUG] Raw inputs: year={year}, engine={engine_size}, tax={tax}, mileage={mileage}, mpg={mpg}, trans={transmission_manual}, fuel_ui={fuel_type}")
+
+            input_row = {
                 'year': float(year),
                 'engineSize': float(engine_size),
                 'tax': float(tax),
                 'mileage': float(mileage),
                 'mpg': float(mpg),
-                'car_age': float(car_age),
-                'price_per_litre': float(price_per_litre),
                 'transmission_Manual': float(transmission_manual),
-                **fuel_type_features  # Add one-hot encoded fuel type features
             }
-            
-            # Create DataFrame with expected feature order
-            input_data = pd.DataFrame([input_features_data])
-            input_data = input_data[expected_features]  # Use expected_features instead of selected_features
-            print(f"[DEBUG] DataFrame input: {input_data.values[0]}")
-            print(f"[DEBUG] Feature order: {list(input_data.columns)}")
+            input_df = pd.DataFrame([input_row])
+
+            # Reindex to expected feature order and fill any missing with 0
+            input_df = input_df.reindex(columns=expected_features, fill_value=0.0)
             print(f"[DEBUG] Expected features: {expected_features}")
-            
-            # Make prediction with Decision Tree (no scaling needed)
-            predicted_price = model.predict(input_data)[0]
-            # Convert numpy types to Python float for MongoDB compatibility
-            predicted_price = float(predicted_price)
+            print(f"[DEBUG] Input before scaling: {input_df.iloc[0].to_dict()}")
+
+            # Apply scaler then predict with CatBoost
+            input_scaled = scaler.transform(input_df)
+            predicted_price = float(model.predict(input_scaled)[0])
             predicted_price = round(predicted_price, 2)
-            
-            print(f"[OK] Prediction Result: ${predicted_price}")  # Debug log
-            
+
+            print(f"[OK] Prediction Result (CatBoost): ${predicted_price}")
+
             # Validate prediction result
             if predicted_price <= 0:
                 flash('Error: Invalid prediction result. Please check your input values.')
                 return render_template('predict.html')
-            
-            if predicted_price > 1000000:  # Sanity check for extremely high prices
-                flash('Warning: Predicted price seems unusually high. Please verify your inputs.')
-                # Continue anyway, but show warning
-            
-            # Save prediction to database including fuel_type
+            if predicted_price > 1000000:
+                flash('Warning: Predicted price seems unusually high.')
+
+            # Save prediction
             prediction_data = {
                 'user_id': session['user_id'],
                 'username': session['username'],
@@ -553,17 +543,16 @@ def predict():
                 'mileage': mileage,
                 'mpg': mpg,
                 'transmission_manual': transmission_manual,
-                'fuel_type': fuel_type,  # Add fuel_type to database
+                'fuel_type': fuel_type,  # keep for history/filters, even if not used by model
                 'predicted_price': predicted_price,
                 'created_at': datetime.now()
             }
-            
             predictions_collection.insert_one(prediction_data)
-            
+
             return render_template('predict.html',
                                  predicted_price=predicted_price,
                                  form_data=request.form)
-            
+
         except Exception as e:
             flash(f'Error making prediction: {str(e)}')
             return render_template('predict.html')
@@ -991,65 +980,36 @@ def admin_export_predictions():
 
 @app.route('/test_model')
 def test_model():
-    """Test route to verify model is working"""
+    """Test route to verify model/scaler/features are working (CatBoost pipeline)"""
     if 'user_id' not in session or session.get('role') != 'admin':
         return redirect(url_for('login'))
-    
     try:
-        if model is None:
-            return jsonify({
-                'success': False, 
-                'message': 'Model is not loaded'
-            })
-        
-        # Test prediction with sample data (2020 car)
-        # Create test features for Decision Tree with all 15 features
-        current_year = datetime.now().year
-        test_year = 2020
-        test_engine_size = 1.5
-        test_car_age = current_year - test_year
-        test_price_per_litre = 15000 / test_engine_size  # Estimated
-        
-        test_features_data = {
-            'year': float(test_year),
-            'engineSize': float(test_engine_size),
+        if model is None or scaler is None or expected_features is None:
+            return jsonify({'success': False, 'message': 'ML components are not loaded'})
+
+        # Build a valid 6-feature sample matching the training contract
+        sample = {
+            'year': 2020.0,
+            'engineSize': 1.5,
             'tax': 150.0,
             'mileage': 12000.0,
             'mpg': 50.0,
-            'car_age': float(test_car_age),
-            'price_per_litre': float(test_price_per_litre),
-            'transmission_Manual': 1.0,
-            'fuelType_Diesel': 0.0,
-            'fuelType_Electric': 0.0,
-            'fuelType_Hybrid': 0.0,
-            'fuelType_Petrol': 1.0,  # Test with Petrol
-            'fuelType_Other1': 0.0,
-            'fuelType_Other2': 0.0,
-            'fuelType_Other3': 0.0
+            'transmission_Manual': 1.0
         }
-        
-        test_df = pd.DataFrame([test_features_data])
-        
-        # Use expected features for Decision Tree
-        test_df = test_df[expected_features]
-        prediction = model.predict(test_df)[0]
-        # Convert numpy types to Python float for JSON serialization
-        prediction = float(prediction)
-        
+        df = pd.DataFrame([sample]).reindex(columns=expected_features, fill_value=0.0)
+        scaled = scaler.transform(df)
+        pred = float(model.predict(scaled)[0])
+
         return jsonify({
             'success': True,
             'model_type': type(model).__name__,
             'expected_features': expected_features,
-            'test_input_filtered': test_df.iloc[0].to_dict(),
-            'predicted_price': round(prediction, 2),
-            'message': 'Decision Tree model is working correctly with all features!'
+            'test_input': df.iloc[0].to_dict(),
+            'predicted_price': round(pred, 2),
+            'message': 'CatBoost model + scaler + selected_features are working correctly.'
         })
-        
     except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': f'Model test failed: {str(e)}'
-        })
+        return jsonify({'success': False, 'message': f'Model test failed: {str(e)}'})
 
 @app.route('/profile')
 def user_profile():

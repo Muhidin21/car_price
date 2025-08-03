@@ -3,260 +3,282 @@
 {% block title %}Car Price Prediction - Predict{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <!-- Header -->
-    <div class="text-center mb-8">
-        <h1 class="text-4xl font-bold text-gray-800 mb-4">
-            <i class="fas fa-calculator text-blue-600 mr-3"></i>Car Price Prediction
-        </h1>
-        <p class="text-gray-600 text-lg">Enter your car details to get an accurate price prediction</p>
-    </div>
-
-    <div class="grid lg:grid-cols-2 gap-8">
-        <!-- Prediction Form -->
-        <div class="bg-white rounded-lg shadow-lg p-8">
-            <h2 class="text-2xl font-semibold text-gray-800 mb-6">
-                <i class="fas fa-car mr-2 text-green-600"></i>Car Details
-            </h2>
-
-            <form method="POST" class="space-y-6">
-                <!-- Year -->
-                <div>
-                    <label for="year" class="block text-sm font-medium text-gray-700 mb-2">
-                        <i class="fas fa-calendar-alt mr-2"></i>Year of Manufacture
-                    </label>
-                    <input type="number" 
-                           id="year" 
-                           name="year" 
-                           min="1990" 
-                           max="2024" 
-                           required 
-value="{{ form_data.year if form_data }}"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                           placeholder="e.g., 2020">
-                    <p class="text-xs text-gray-500 mt-1">Enter year between 1990-2024</p>
+<div class="flex min-h-[calc(100vh-6rem)]">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-gray-900 text-white flex-shrink-0">
+        <div class="p-6 border-b border-gray-800">
+            <div class="flex items-center space-x-3">
+                <div class="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center">
+                    <i class="fas fa-user"></i>
                 </div>
-
-                <!-- Engine Size -->
                 <div>
-                    <label for="engine_size" class="block text-sm font-medium text-gray-700 mb-2">
-                        <i class="fas fa-cog mr-2"></i>Engine Size (Liters)
-                    </label>
-                    <input type="number" 
-                           id="engine_size" 
-                           name="engine_size" 
-                           step="0.1" 
-                           min="0.5" 
-                           max="8.0" 
-                           required 
-value="{{ form_data.engine_size if form_data }}"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                           placeholder="e.g., 1.5">
-                    <p class="text-xs text-gray-500 mt-1">Engine displacement in liters</p>
+                    <div class="text-sm text-gray-300">Signed in as</div>
+                    <div class="font-semibold">{{ session.username }}</div>
                 </div>
-
-                <!-- Annual Tax -->
-                <div>
-                    <label for="tax" class="block text-sm font-medium text-gray-700 mb-2">
-                        <i class="fas fa-dollar-sign mr-2"></i>Annual Tax ($)
-                    </label>
-                    <input type="number" 
-                           id="tax" 
-                           name="tax" 
-                           min="0" 
-                           max="1000" 
-                           required 
-value="{{ form_data.tax if form_data }}"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                           placeholder="e.g., 150">
-                    <p class="text-xs text-gray-500 mt-1">Annual vehicle tax amount</p>
-                </div>
-
-                <!-- Mileage -->
-                <div>
-                    <label for="mileage" class="block text-sm font-medium text-gray-700 mb-2">
-                        <i class="fas fa-road mr-2"></i>Mileage (Miles)
-                    </label>
-                    <input type="number" 
-                           id="mileage" 
-                           name="mileage" 
-                           min="0" 
-                           max="500000" 
-                           required 
-value="{{ form_data.mileage if form_data }}"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                           placeholder="e.g., 12000">
-                    <p class="text-xs text-gray-500 mt-1">Total miles driven</p>
-                </div>
-
-                <!-- MPG -->
-                <div>
-                    <label for="mpg" class="block text-sm font-medium text-gray-700 mb-2">
-                        <i class="fas fa-gas-pump mr-2"></i>Fuel Efficiency (MPG)
-                    </label>
-                    <input type="number" 
-                           id="mpg" 
-                           name="mpg" 
-                           step="0.1" 
-                           min="10" 
-                           max="100" 
-                           required 
-value="{{ form_data.mpg if form_data }}"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                           placeholder="e.g., 50.0">
-                    <p class="text-xs text-gray-500 mt-1">Miles per gallon</p>
-                </div>
-
-                <!-- Transmission -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        <i class="fas fa-cogs mr-2"></i>Transmission Type
-                    </label>
-                    <div class="grid grid-cols-2 gap-4">
-                        <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-                            <input type="radio"
-                                   name="transmission_manual"
-                                   value="1"
-                                   {{ 'checked' if form_data and form_data.transmission_manual == '1' else 'checked' }}
-                                   class="mr-3">
-                            <div>
-                                <div class="font-medium">Manual</div>
-                                <div class="text-sm text-gray-500">Stick shift</div>
-                            </div>
-                        </label>
-                        <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-                            <input type="radio"
-                                   name="transmission_manual"
-                                   value="0"
-                                   {{ 'checked' if form_data and form_data.transmission_manual == '0' else '' }}
-                                   class="mr-3">
-                            <div>
-                                <div class="font-medium">Automatic</div>
-                                <div class="text-sm text-gray-500">Auto/Semi-auto</div>
-                            </div>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Fuel Type -->
-                <div>
-                    <label for="fuel_type" class="block text-sm font-medium text-gray-700 mb-2">
-                        <i class="fas fa-gas-pump mr-2"></i>Fuel Type
-                    </label>
-                    <select id="fuel_type"
-                            name="fuel_type"
-                            required
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Select Fuel Type</option>
-                        <option value="Petrol" {{ 'selected' if form_data and form_data.fuel_type == 'Petrol' else 'selected' }}>Petrol</option>
-                        <option value="Diesel" {{ 'selected' if form_data and form_data.fuel_type == 'Diesel' else '' }}>Diesel</option>
-                        <option value="Hybrid" {{ 'selected' if form_data and form_data.fuel_type == 'Hybrid' else '' }}>Hybrid</option>
-                        <option value="Electric" {{ 'selected' if form_data and form_data.fuel_type == 'Electric' else '' }}>Electric</option>
-                    </select>
-                    <p class="text-xs text-gray-500 mt-1">Select the fuel type of your car</p>
-                </div>
-
-                <!-- Submit Button -->
-                <button type="submit"
-                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg transition duration-200 text-lg">
-                    <i class="fas fa-calculator mr-2"></i>Predict Car Price
-                </button>
-            </form>
+            </div>
         </div>
 
-        <!-- Prediction Result -->
-        <div class="space-y-6">
-            {% if predicted_price %}
-            <!-- Prediction Result Card -->
-            <div class="bg-gradient-to-r from-green-500 to-blue-600 text-white p-8 rounded-lg shadow-lg">
-                <div class="text-center">
-                    <i class="fas fa-check-circle text-4xl mb-4"></i>
-                    <h3 class="text-2xl font-bold mb-2">Prediction Complete!</h3>
-                    <div class="text-5xl font-bold mb-4">
-                        ${{ "{:,.2f}".format(predicted_price) }}
-                    </div>
-                    <p class="text-green-100">Estimated market value for your car</p>
-                </div>
-            </div>
+        <nav class="p-4 space-y-2">
+            <a href="{{ url_for('user_dashboard') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-800">
+                <i class="fas fa-gauge-high w-6"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ url_for('predict') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-800 bg-gray-800">
+                <i class="fas fa-calculator w-6"></i>
+                <span>Predict</span>
+            </a>
+            <a href="{{ url_for('user_profile') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-800">
+                <i class="fas fa-id-badge w-6"></i>
+                <span>Profile</span>
+            </a>
+            <a href="{{ url_for('logout') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-800 text-red-300">
+                <i class="fas fa-sign-out-alt w-6"></i>
+                <span>Logout</span>
+            </a>
+        </nav>
+    </aside>
 
-            <!-- Car Summary -->
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">
-                    <i class="fas fa-info-circle mr-2 text-blue-600"></i>Car Summary
-                </h3>
-                <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                        <span class="text-gray-600">Year:</span>
-                        <span class="font-medium ml-2">{{ form_data.year }}</span>
-                    </div>
-                    <div>
-                        <span class="text-gray-600">Engine:</span>
-                        <span class="font-medium ml-2">{{ form_data.engine_size }}L</span>
-                    </div>
-                    <div>
-                        <span class="text-gray-600">Mileage:</span>
-                        <span class="font-medium ml-2">{{ "{:,}".format(form_data.mileage|int) }} miles</span>
-                    </div>
-                    <div>
-                        <span class="text-gray-600">MPG:</span>
-                        <span class="font-medium ml-2">{{ form_data.mpg }}</span>
-                    </div>
-                    <div>
-                        <span class="text-gray-600">Tax:</span>
-                        <span class="font-medium ml-2">${{ form_data.tax }}</span>
-                    </div>
-                    <div>
-                        <span class="text-gray-600">Transmission:</span>
-                        <span class="font-medium ml-2">
-                            {% if form_data.transmission_manual == '1' %}Manual{% else %}Automatic{% endif %}
-                        </span>
-                    </div>
-                    <div>
-                        <span class="text-gray-600">Fuel Type:</span>
-                        <span class="font-medium ml-2">{{ form_data.fuel_type }}</span>
-                    </div>
-                </div>
-            </div>
+    <!-- Main -->
+    <section class="flex-1 p-6 bg-gray-50">
+        <div class="grid lg:grid-cols-2 gap-8">
+            <!-- Prediction Form -->
+            <div class="bg-white rounded-lg shadow-lg p-8">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-6">
+                    <i class="fas fa-car mr-2 text-green-600"></i>Car Details
+                </h2>
 
-            <!-- Actions -->
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">
-                    <i class="fas fa-tools mr-2 text-purple-600"></i>What's Next?
-                </h3>
-                <div class="space-y-3">
-                    <button onclick="savePrediction()" 
-                            class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded">
-                        <i class="fas fa-save mr-2"></i>Save This Prediction
+                <form method="POST" class="space-y-6">
+                    <!-- Year -->
+                    <div>
+                        <label for="year" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-calendar-alt mr-2"></i>Year of Manufacture
+                        </label>
+                        <input type="number" 
+                               id="year" 
+                               name="year" 
+                               min="1990" 
+                               max="2024" 
+                               required 
+                               value="{{ form_data.year if form_data }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="e.g., 2020">
+                        <p class="text-xs text-gray-500 mt-1">Enter year between 1990-2024</p>
+                    </div>
+
+                    <!-- Engine Size -->
+                    <div>
+                        <label for="engine_size" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-cog mr-2"></i>Engine Size (Liters)
+                        </label>
+                        <input type="number" 
+                               id="engine_size" 
+                               name="engine_size" 
+                               step="0.1" 
+                               min="0.5" 
+                               max="8.0" 
+                               required 
+                               value="{{ form_data.engine_size if form_data }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="e.g., 1.5">
+                        <p class="text-xs text-gray-500 mt-1">Engine displacement in liters</p>
+                    </div>
+
+                    <!-- Annual Tax -->
+                    <div>
+                        <label for="tax" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-dollar-sign mr-2"></i>Annual Tax ($)
+                        </label>
+                        <input type="number" 
+                               id="tax" 
+                               name="tax" 
+                               min="0" 
+                               max="1000" 
+                               required 
+                               value="{{ form_data.tax if form_data }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="e.g., 150">
+                        <p class="text-xs text-gray-500 mt-1">Annual vehicle tax amount</p>
+                    </div>
+
+                    <!-- Mileage -->
+                    <div>
+                        <label for="mileage" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-road mr-2"></i>Mileage (Miles)
+                        </label>
+                        <input type="number" 
+                               id="mileage" 
+                               name="mileage" 
+                               min="0" 
+                               max="500000" 
+                               required 
+                               value="{{ form_data.mileage if form_data }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="e.g., 12000">
+                        <p class="text-xs text-gray-500 mt-1">Total miles driven</p>
+                    </div>
+
+                    <!-- MPG -->
+                    <div>
+                        <label for="mpg" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-gas-pump mr-2"></i>Fuel Efficiency (MPG)
+                        </label>
+                        <input type="number" 
+                               id="mpg" 
+                               name="mpg" 
+                               step="0.1" 
+                               min="10" 
+                               max="100" 
+                               required 
+                               value="{{ form_data.mpg if form_data }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="e.g., 50.0">
+                        <p class="text-xs text-gray-500 mt-1">Miles per gallon</p>
+                    </div>
+
+                    <!-- Transmission -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-cogs mr-2"></i>Transmission Type
+                        </label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                                <input type="radio"
+                                       name="transmission_manual"
+                                       value="1"
+                                       {{ 'checked' if form_data and form_data.transmission_manual == '1' else 'checked' }}
+                                       class="mr-3">
+                                <div>
+                                    <div class="font-medium">Manual</div>
+                                    <div class="text-sm text-gray-500">Stick shift</div>
+                                </div>
+                            </label>
+                            <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                                <input type="radio"
+                                       name="transmission_manual"
+                                       value="0"
+                                       {{ 'checked' if form_data and form_data.transmission_manual == '0' else '' }}
+                                       class="mr-3">
+                                <div>
+                                    <div class="font-medium">Automatic</div>
+                                    <div class="text-sm text-gray-500">Auto/Semi-auto</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Fuel Type -->
+                    <div>
+                        <label for="fuel_type" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-gas-pump mr-2"></i>Fuel Type
+                        </label>
+                        <select id="fuel_type"
+                                name="fuel_type"
+                                required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Select Fuel Type</option>
+                            <option value="Petrol" {{ 'selected' if form_data and form_data.fuel_type == 'Petrol' else 'selected' }}>Petrol</option>
+                            <option value="Diesel" {{ 'selected' if form_data and form_data.fuel_type == 'Diesel' else '' }}>Diesel</option>
+                            <option value="Hybrid" {{ 'selected' if form_data and form_data.fuel_type == 'Hybrid' else '' }}>Hybrid</option>
+                            <option value="Electric" {{ 'selected' if form_data and form_data.fuel_type == 'Electric' else '' }}>Electric</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Select the fuel type of your car</p>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit"
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg transition duration-200 text-lg">
+                        <i class="fas fa-calculator mr-2"></i>Predict Car Price
                     </button>
-                    <button onclick="shareResult()" 
-                            class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded">
-                        <i class="fas fa-share mr-2"></i>Share Result
-                    </button>
-                    <a href="{{ url_for('predict') }}" 
-                       class="block w-full bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded text-center">
-                        <i class="fas fa-plus mr-2"></i>New Prediction
-                    </a>
-                </div>
+                </form>
             </div>
-            {% else %}
-            <!-- Information Card -->
-           
 
-            <!-- Tips Card -->
-            
-            {% endif %}
+            <!-- Prediction Result -->
+            <div class="space-y-6">
+                {% if predicted_price %}
+                <!-- Prediction Result Card -->
+                <div class="bg-gradient-to-r from-green-500 to-blue-600 text-white p-8 rounded-lg shadow-lg">
+                    <div class="text-center">
+                        <i class="fas fa-check-circle text-4xl mb-4"></i>
+                        <h3 class="text-2xl font-bold mb-2">Prediction Complete!</h3>
+                        <div class="text-5xl font-bold mb-4">
+                            ${{ "{:,.2f}".format(predicted_price) }}
+                        </div>
+                        <p class="text-green-100">Estimated market value for your car</p>
+                    </div>
+                </div>
+
+                <!-- Car Summary -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-info-circle mr-2 text-blue-600"></i>Car Summary
+                    </h3>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-600">Year:</span>
+                            <span class="font-medium ml-2">{{ form_data.year }}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Engine:</span>
+                            <span class="font-medium ml-2">{{ form_data.engine_size }}L</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Mileage:</span>
+                            <span class="font-medium ml-2">{{ "{:,}".format(form_data.mileage|int) }} miles</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">MPG:</span>
+                            <span class="font-medium ml-2">{{ form_data.mpg }}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Tax:</span>
+                            <span class="font-medium ml-2">${{ form_data.tax }}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Transmission:</span>
+                            <span class="font-medium ml-2">
+                                {% if form_data.transmission_manual == '1' %}Manual{% else %}Automatic{% endif %}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Fuel Type:</span>
+                            <span class="font-medium ml-2">{{ form_data.fuel_type }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-tools mr-2 text-purple-600"></i>What's Next?
+                    </h3>
+                    <div class="space-y-3">
+                        <button onclick="savePrediction()" 
+                                class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded">
+                            <i class="fas fa-save mr-2"></i>Save This Prediction
+                        </button>
+                        <button onclick="shareResult()" 
+                                class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded">
+                            <i class="fas fa-share mr-2"></i>Share Result
+                        </button>
+                        <a href="{{ url_for('predict') }}" 
+                           class="block w-full bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded text-center">
+                            <i class="fas fa-plus mr-2"></i>New Prediction
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                {% endif %}
+            </div>
         </div>
-    </div>
+    </section>
 </div>
 
 <script>
 function savePrediction() {
-    // In a real app, this would save to favorites or bookmarks
     alert('Prediction saved to your dashboard!');
 }
 
 function shareResult() {
-    // In a real app, this would generate a shareable link
     const result = "I just predicted my car's value at ${{ predicted_price if predicted_price else '0' }} using the Car Price Prediction System!";
     
     if (navigator.share) {
@@ -266,19 +288,16 @@ function shareResult() {
             url: window.location.href
         });
     } else {
-        // Fallback for browsers that don't support Web Share API
         navigator.clipboard.writeText(result + ' ' + window.location.href).then(() => {
             alert('Result copied to clipboard!');
         });
     }
 }
 
-// Form validation and UX improvements
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.querySelector('form');
     const inputs = form.querySelectorAll('input[type="number"]');
     
-    // Add real-time validation feedback
     inputs.forEach(input => {
         input.addEventListener('input', function() {
             const value = parseFloat(this.value);
@@ -295,7 +314,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Add loading state to submit button
     form.addEventListener('submit', function() {
         const submitBtn = form.querySelector('button[type="submit"]');
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Predicting...';

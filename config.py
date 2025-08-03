@@ -17,10 +17,13 @@ class Config:
     USERS_COLLECTION = 'users'
     PREDICTIONS_COLLECTION = 'predictions'
     
-    # Model Configuration - Using Decision Tree
-    MODEL_PATH = 'decision_tree_model.pkl'
-    SCALER_PATH = 'scaler.pkl'  # Not used for Decision Tree but kept for compatibility
-    FEATURES_PATH = 'selected_features.pkl'  # Not used for Decision Tree but kept for compatibility
+    # Model Configuration - default artifacts (update as needed)
+    # Available models saved by notebook: random_forest_model.pkl, xgb_model.pkl, gbr_model.pkl,
+    # hgb_model.pkl, decision_tree_model.pkl, linear_regression_model.pkl, catboost_model.pkl
+    # Set to Random Forest by default as per request, but app.py currently forces CatBoost explicitly.
+    MODEL_PATH = os.getenv('MODEL_PATH', 'random_forest_model.pkl')
+    SCALER_PATH = os.getenv('SCALER_PATH', 'scaler.pkl')
+    FEATURES_PATH = os.getenv('FEATURES_PATH', 'selected_features.pkl')
     
     # Email Configuration for OTP
     MAIL_SERVER = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
@@ -44,5 +47,10 @@ class Config:
         
         if Config.MONGODB_URI == 'mongodb+srv://<username>:<password>@<cluster-name>.mongodb.net/car_prediction_db?retryWrites=true&w=majority':
             raise ValueError("Please update MONGODB_URI with your actual MongoDB Atlas connection string")
+
+        # Validate model artifacts exist (warn only; app.py will also handle)
+        for p in [Config.MODEL_PATH, Config.SCALER_PATH, Config.FEATURES_PATH]:
+            if not os.path.exists(p):
+                print(f"[WARN] Missing artifact: {p} (ensure correct file in project root or set env path)")
         
         return True

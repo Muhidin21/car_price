@@ -75,9 +75,7 @@
             <div class="mt-6 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
                 <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
                 <div class="flex flex-wrap gap-3">
-                    <a href="{{ url_for('predict') }}" class="inline-flex items-center rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 transition">
-                        <i class="fas fa-calculator mr-2"></i>Make a Prediction
-                    </a>
+                   
                     {% if session.role != 'admin' %}
                     <a href="{{ url_for('user_dashboard') }}" class="inline-flex items-center rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-200 transition">
                         <i class="fas fa-clock-rotate-left mr-2"></i>View History
