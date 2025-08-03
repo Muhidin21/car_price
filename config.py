@@ -17,10 +17,10 @@ class Config:
     USERS_COLLECTION = 'users'
     PREDICTIONS_COLLECTION = 'predictions'
     
-    # Model Configuration - Using XGBoost
-    MODEL_PATH = 'XGBoost_model.pkl'
-    SCALER_PATH = 'scaler.pkl'  # Not used for XGBoost but kept for compatibility
-    FEATURES_PATH = 'selected_features.pkl'
+    # Model Configuration - Using Decision Tree
+    MODEL_PATH = 'decision_tree_model.pkl'
+    SCALER_PATH = 'scaler.pkl'  # Not used for Decision Tree but kept for compatibility
+    FEATURES_PATH = 'selected_features.pkl'  # Not used for Decision Tree but kept for compatibility
     
     # Email Configuration for OTP
     MAIL_SERVER = os.getenv('MAIL_SERVER', 'smtp.gmail.com')

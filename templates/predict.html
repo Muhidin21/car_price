@@ -114,9 +114,9 @@ value="{{ form_data.mpg if form_data }}"
                     </label>
                     <div class="grid grid-cols-2 gap-4">
                         <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-                            <input type="radio" 
-                                   name="transmission_manual" 
-                                   value="1" 
+                            <input type="radio"
+                                   name="transmission_manual"
+                                   value="1"
                                    {{ 'checked' if form_data and form_data.transmission_manual == '1' else 'checked' }}
                                    class="mr-3">
                             <div>
@@ -125,9 +125,9 @@ value="{{ form_data.mpg if form_data }}"
                             </div>
                         </label>
                         <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-                            <input type="radio" 
-                                   name="transmission_manual" 
-                                   value="0" 
+                            <input type="radio"
+                                   name="transmission_manual"
+                                   value="0"
                                    {{ 'checked' if form_data and form_data.transmission_manual == '0' else '' }}
                                    class="mr-3">
                             <div>
@@ -138,8 +138,26 @@ value="{{ form_data.mpg if form_data }}"
                     </div>
                 </div>
 
+                <!-- Fuel Type -->
+                <div>
+                    <label for="fuel_type" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-gas-pump mr-2"></i>Fuel Type
+                    </label>
+                    <select id="fuel_type"
+                            name="fuel_type"
+                            required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Select Fuel Type</option>
+                        <option value="Petrol" {{ 'selected' if form_data and form_data.fuel_type == 'Petrol' else 'selected' }}>Petrol</option>
+                        <option value="Diesel" {{ 'selected' if form_data and form_data.fuel_type == 'Diesel' else '' }}>Diesel</option>
+                        <option value="Hybrid" {{ 'selected' if form_data and form_data.fuel_type == 'Hybrid' else '' }}>Hybrid</option>
+                        <option value="Electric" {{ 'selected' if form_data and form_data.fuel_type == 'Electric' else '' }}>Electric</option>
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Select the fuel type of your car</p>
+                </div>
+
                 <!-- Submit Button -->
-                <button type="submit" 
+                <button type="submit"
                         class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg transition duration-200 text-lg">
                     <i class="fas fa-calculator mr-2"></i>Predict Car Price
                 </button>
@@ -193,6 +211,10 @@ value="{{ form_data.mpg if form_data }}"
                             {% if form_data.transmission_manual == '1' %}Manual{% else %}Automatic{% endif %}
                         </span>
                     </div>
+                    <div>
+                        <span class="text-gray-600">Fuel Type:</span>
+                        <span class="font-medium ml-2">{{ form_data.fuel_type }}</span>
+                    </div>
                 </div>
             </div>
 
@@ -218,10 +240,10 @@ value="{{ form_data.mpg if form_data }}"
             </div>
             {% else %}
             <!-- Information Card -->
-            
+           
 
             <!-- Tips Card -->
-           
+            
             {% endif %}
         </div>
     </div>

@@ -8,18 +8,15 @@
             <i class="fas fa-car text-6xl mb-4 block"></i>
             Car Price Prediction System
         </h1>
-        <p class="text-xl mb-8 max-w-2xl mx-auto">
-            Get accurate car price predictions using advanced machine learning algorithms.
-            Our XGBoost model provides reliable estimates based on car specifications.
-        </p>
+        
         
         {% if not session.user_id %}
             <div class="space-x-4">
                 <a href="{{ url_for('register') }}" class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg text-lg font-semibold inline-block">
-                    <i class="fas fa-user-plus mr-2"></i>Get Started
+                    <i class="fas fa-user-plus mr-2"></i>Sign Up
                 </a>
                 <a href="{{ url_for('login') }}" class="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 rounded-lg text-lg font-semibold inline-block">
-                    <i class="fas fa-sign-in-alt mr-2"></i>Login
+                    <i class="fas fa-sign-in-alt mr-2"></i>Sign In
                 </a>
             </div>
         {% else %}
@@ -40,43 +37,54 @@
         {% endif %}
     </div>
 
-    <!-- Features Section -->
-    <div class="grid md:grid-cols-3 gap-8 mb-12">
-        <div class="bg-white p-8 rounded-lg shadow-lg">
-            <div class="text-blue-600 text-4xl mb-4">
-                <i class="fas fa-brain"></i>
-            </div>
-            <h3 class="text-xl font-bold mb-4">AI-Powered Predictions</h3>
-            <p class="text-gray-600">
-                Our XGBoost machine learning model provides highly accurate car price predictions
-                based on comprehensive market data analysis.
-            </p>
-        </div>
-        
-        <div class="bg-white p-8 rounded-lg shadow-lg">
-            <div class="text-green-600 text-4xl mb-4">
-                <i class="fas fa-chart-line"></i>
-            </div>
-            <h3 class="text-xl font-bold mb-4">Real-time Analysis</h3>
-            <p class="text-gray-600">
-                Get instant price estimates by inputting car specifications including year, 
-                engine size, mileage, and transmission type.
-            </p>
-        </div>
-        
-        <div class="bg-white p-8 rounded-lg shadow-lg">
-            <div class="text-purple-600 text-4xl mb-4">
-                <i class="fas fa-history"></i>
-            </div>
-            <h3 class="text-xl font-bold mb-4">Prediction History</h3>
-            <p class="text-gray-600">
-                Track all your previous predictions and compare different car models 
-                to make informed purchasing decisions.
-            </p>
-        </div>
-    </div>
-
-    <!-- Model Information -->
+  
+   
     
+    <!-- Footer -->
+    <footer class="mt-16 border-t border-gray-200 pt-8 pb-10 text-center text-sm text-gray-600">
+        <!-- Brand / Web name -->
+        <div class="mb-2 flex items-center justify-center space-x-2">
+            <i class="fas fa-car text-blue-600"></i>
+            <span class="font-semibold text-gray-800">Car Price Prediction</span>
+            <span class="hidden sm:inline">• Powered by Machine Learning</span>
+        </div>
+
+        <!-- Social buttons -->
+        <div class="flex items-center justify-center space-x-4 mb-3">
+            <a href="https://facebook.com" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition" aria-label="Facebook">
+                <i class="fab fa-facebook-f"></i>
+            </a>
+            <a href="https://twitter.com" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition" aria-label="Twitter">
+                <i class="fab fa-twitter"></i>
+            </a>
+            <a href="https://instagram.com" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-pink-50 text-pink-600 hover:bg-pink-100 transition" aria-label="Instagram">
+                <i class="fab fa-instagram"></i>
+            </a>
+            <a href="https://linkedin.com" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100 transition" aria-label="LinkedIn">
+                <i class="fab fa-linkedin-in"></i>
+            </a>
+            <a href="mailto:support@example.com" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-gray-50 text-gray-700 hover:bg-gray-100 transition" aria-label="Email">
+                <i class="fas fa-envelope"></i>
+            </a>
+        </div>
+
+        <!-- Footer links -->
+        <div class="space-x-4 mb-2">
+            <a href="{{ url_for('home') }}" class="hover:text-gray-800">Home</a>
+            {% if not session.user_id %}
+                <a href="{{ url_for('register') }}" class="hover:text-gray-800">Sign Up</a>
+                <a href="{{ url_for('login') }}" class="hover:text-gray-800">Sign In</a>
+            {% else %}
+                {% if session.role == 'admin' %}
+                    <a href="{{ url_for('admin_dashboard') }}" class="hover:text-gray-800">Dashboard</a>
+                {% else %}
+                    <a href="{{ url_for('user_dashboard') }}" class="hover:text-gray-800">My Dashboard</a>
+                {% endif %}
+                <a href="{{ url_for('logout') }}" class="hover:text-gray-800">Logout</a>
+            {% endif %}
+        </div>
+
+        <div class="text-xs text-gray-400">© {{  now().year if now is defined else '2025' }} Car Price Prediction. All rights reserved.</div>
+    </footer>
 </div>
 {% endblock %}

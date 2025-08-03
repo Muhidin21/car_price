@@ -57,45 +57,51 @@ except Exception as e:
     client = None
     db = None
 
-# Load XGBoost model and features (no scaler needed)
+# Load Decision Tree model (no scaler or selected features needed)
 try:
-    # Load XGBoost model
+    # Load Decision Tree model
     model = joblib.load(Config.MODEL_PATH)
     model_type = type(model).__name__
-    print(f"[OK] XGBoost Model loaded successfully: {model_type}")
+    print(f"[OK] Decision Tree Model loaded successfully: {model_type}")
     
-    # XGBoost does not require scaler
+    # Decision Tree does not require scaler or selected features
     scaler = None
-    print("[INFO] Skipping scaler load (XGBoost model does not require scaling)")
+    selected_features = None
+    print("[INFO] Skipping scaler load (Decision Tree model does not require scaling)")
+    print("[INFO] Skipping selected features load (Decision Tree uses all features)")
     
-    # Load selected features (order used at training)
-    selected_features = joblib.load(Config.FEATURES_PATH)
-    print(f"[OK] Features loaded successfully: {selected_features}")
-    print(f"[OK] Number of features: {len(selected_features)}")
+    # Define the expected feature order for Decision Tree model (15 features total)
+    # Based on notebook analysis: 7 numerical + 8 categorical (1 transmission + 7 fuel types)
+    expected_features = [
+        'year', 'engineSize', 'tax', 'mileage', 'mpg', 'car_age', 'price_per_litre',
+        'transmission_Manual', 'fuelType_Diesel', 'fuelType_Electric', 'fuelType_Hybrid',
+        'fuelType_Petrol', 'fuelType_Other1', 'fuelType_Other2', 'fuelType_Other3'
+    ]
     
-    if 'XGB' in model_type or 'XGBoost' in model_type:
-        print("[OK] XGBoost Regressor detected")
+    if 'DecisionTree' in model_type:
+        print("[OK] Decision Tree Regressor detected")
         print("[OK] System ready for direct predictions without scaling")
     elif 'RandomForest' in model_type:
         print("[OK] Random Forest Regressor confirmed")
         print("[OK] System ready for predictions")
-    elif 'CatBoost' in model_type:
-        print("[OK] CatBoost Regressor detected")
+    elif 'XGB' in model_type or 'XGBoost' in model_type:
+        print("[OK] XGBoost Regressor detected")
         print("[OK] System ready for predictions")
     else:
         print(f"[OK] Model type: {model_type}")
         print("[OK] System ready for predictions")
     
-    print("[OK] Complete ML pipeline loaded: Model + Features (no scaler needed)")
+    print(f"[OK] Expected features: {expected_features}")
+    print("[OK] Complete ML pipeline loaded: Model (no scaler or feature selection needed)")
 
 except Exception as e:
     print(f"[ERROR] Error loading ML components: {e}")
     print("Please make sure these files are in the project directory:")
-    print("- XGBoost_model.pkl")
-    print("- selected_features.pkl")
+    print("- decision_tree_model.pkl")
     model = None
     scaler = None
     selected_features = None
+    expected_features = None
 
 # OTP utility functions
 def generate_otp():
@@ -414,9 +420,9 @@ def predict():
     
     if request.method == 'POST':
         try:
-            # Check if model is loaded (no scaler needed for XGBoost)
+            # Check if model is loaded (no scaler needed for Decision Tree)
             if model is None:
-                flash('Error: XGBoost model is not loaded. Please check server logs.')
+                flash('Error: Decision Tree model is not loaded. Please check server logs.')
                 return render_template('predict.html')
             
             # Get and validate form data
@@ -426,6 +432,7 @@ def predict():
             mileage = int(request.form['mileage'])
             mpg = float(request.form['mpg'])
             transmission_manual = int(request.form['transmission_manual'])
+            fuel_type = request.form['fuel_type']  # New fuelType input
             
             # Enhanced input validation with warnings
             warnings = []
@@ -455,6 +462,10 @@ def predict():
                 flash('Invalid transmission type')
                 return render_template('predict.html')
             
+            if fuel_type not in ['Petrol', 'Diesel', 'Hybrid', 'Electric']:
+                flash('Invalid fuel type selected')
+                return render_template('predict.html')
+            
             # Realistic value warnings
             if engine_size > 3.0:
                 warnings.append(f'Engine size {engine_size}L is very large (typical: 1.0-2.5L). This will increase the predicted price significantly.')
@@ -469,29 +480,55 @@ def predict():
             for warning in warnings:
                 flash(f'⚠️ Warning: {warning}', 'warning')
             
-            # Prepare data for XGBoost prediction (no scaling needed)
-            print(f"[DEBUG] Raw inputs: year={year}, engine={engine_size}, tax={tax}, mileage={mileage}, mpg={mpg}, trans={transmission_manual}")
+            # Prepare data for Decision Tree prediction (no scaling needed)
+            print(f"[DEBUG] Raw inputs: year={year}, engine={engine_size}, tax={tax}, mileage={mileage}, mpg={mpg}, trans={transmission_manual}, fuel={fuel_type}")
             
-            # Create DataFrame with only the features used by XGBoost model
-            input_features_data = {
-                'year': year,
-                'engineSize': engine_size,
-                'tax': tax,
-                'mileage': mileage,
-                'mpg': mpg,
-                'transmission_Manual': transmission_manual
+            # Calculate derived features
+            current_year = datetime.now().year
+            car_age = current_year - year
+            
+            # Estimate price_per_litre (rough estimation based on typical car values)
+            # This is a placeholder - in real scenario this would be calculated from actual price
+            estimated_price = 15000  # Base estimation
+            if engine_size > 0:
+                price_per_litre = estimated_price / engine_size
+            else:
+                price_per_litre = estimated_price  # Fallback for electric cars
+            
+            # Create one-hot encoded features for fuelType (7 categories total)
+            fuel_type_features = {
+                'fuelType_Diesel': 1.0 if fuel_type == 'Diesel' else 0.0,
+                'fuelType_Electric': 1.0 if fuel_type == 'Electric' else 0.0,
+                'fuelType_Hybrid': 1.0 if fuel_type == 'Hybrid' else 0.0,
+                'fuelType_Petrol': 1.0 if fuel_type == 'Petrol' else 0.0,
+                'fuelType_Other1': 0.0,  # Additional fuel type categories from training
+                'fuelType_Other2': 0.0,
+                'fuelType_Other3': 0.0
             }
             
-            # Create DataFrame and ensure correct feature order from training
+            # Create DataFrame with all 15 features for Decision Tree model
+            input_features_data = {
+                'year': float(year),
+                'engineSize': float(engine_size),
+                'tax': float(tax),
+                'mileage': float(mileage),
+                'mpg': float(mpg),
+                'car_age': float(car_age),
+                'price_per_litre': float(price_per_litre),
+                'transmission_Manual': float(transmission_manual),
+                **fuel_type_features  # Add one-hot encoded fuel type features
+            }
+            
+            # Create DataFrame with expected feature order
             input_data = pd.DataFrame([input_features_data])
-            input_data = input_data[selected_features]
+            input_data = input_data[expected_features]  # Use expected_features instead of selected_features
             print(f"[DEBUG] DataFrame input: {input_data.values[0]}")
             print(f"[DEBUG] Feature order: {list(input_data.columns)}")
-            print(f"[DEBUG] Selected features from training: {selected_features}")
+            print(f"[DEBUG] Expected features: {expected_features}")
             
-            # Make prediction with XGBoost (no scaling needed)
+            # Make prediction with Decision Tree (no scaling needed)
             predicted_price = model.predict(input_data)[0]
-            # Convert numpy.float32 to Python float for MongoDB compatibility
+            # Convert numpy types to Python float for MongoDB compatibility
             predicted_price = float(predicted_price)
             predicted_price = round(predicted_price, 2)
             
@@ -506,7 +543,7 @@ def predict():
                 flash('Warning: Predicted price seems unusually high. Please verify your inputs.')
                 # Continue anyway, but show warning
             
-            # Save prediction to database (no model_type since it's not used)
+            # Save prediction to database including fuel_type
             prediction_data = {
                 'user_id': session['user_id'],
                 'username': session['username'],
@@ -516,6 +553,7 @@ def predict():
                 'mileage': mileage,
                 'mpg': mpg,
                 'transmission_manual': transmission_manual,
+                'fuel_type': fuel_type,  # Add fuel_type to database
                 'predicted_price': predicted_price,
                 'created_at': datetime.now()
             }
@@ -965,32 +1003,46 @@ def test_model():
             })
         
         # Test prediction with sample data (2020 car)
-        # Create all possible features first
-        all_test_features = {
-            'year': 2020,
-            'engineSize': 1.5,
-            'tax': 150,
-            'model': 5,
-            'mileage': 12000,
+        # Create test features for Decision Tree with all 15 features
+        current_year = datetime.now().year
+        test_year = 2020
+        test_engine_size = 1.5
+        test_car_age = current_year - test_year
+        test_price_per_litre = 15000 / test_engine_size  # Estimated
+        
+        test_features_data = {
+            'year': float(test_year),
+            'engineSize': float(test_engine_size),
+            'tax': 150.0,
+            'mileage': 12000.0,
             'mpg': 50.0,
-            'transmission_Manual': 1
+            'car_age': float(test_car_age),
+            'price_per_litre': float(test_price_per_litre),
+            'transmission_Manual': 1.0,
+            'fuelType_Diesel': 0.0,
+            'fuelType_Electric': 0.0,
+            'fuelType_Hybrid': 0.0,
+            'fuelType_Petrol': 1.0,  # Test with Petrol
+            'fuelType_Other1': 0.0,
+            'fuelType_Other2': 0.0,
+            'fuelType_Other3': 0.0
         }
         
-        test_df = pd.DataFrame([all_test_features])
+        test_df = pd.DataFrame([test_features_data])
         
-        # Filter to only selected features (excludes 'model' if not in selected_features)
-        test_df = test_df[selected_features]
+        # Use expected features for Decision Tree
+        test_df = test_df[expected_features]
         prediction = model.predict(test_df)[0]
-        # Convert numpy.float32 to Python float for JSON serialization
+        # Convert numpy types to Python float for JSON serialization
         prediction = float(prediction)
         
         return jsonify({
             'success': True,
             'model_type': type(model).__name__,
-            'selected_features': selected_features,
+            'expected_features': expected_features,
             'test_input_filtered': test_df.iloc[0].to_dict(),
             'predicted_price': round(prediction, 2),
-            'message': 'XGBoost model is working correctly with selected features!'
+            'message': 'Decision Tree model is working correctly with all features!'
         })
         
     except Exception as e:

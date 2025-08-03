@@ -46,16 +46,16 @@
                                 </a>
                                 {% endif %}
                                 <a href="{{ url_for('logout') }}" class="block px-4 py-2 text-red-600 hover:bg-gray-100">
-                                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Signout
                                 </a>
                             </div>
                         </div>
                     {% else %}
                         <a href="{{ url_for('login') }}" class="text-white hover:text-blue-200">
-                            <i class="fas fa-sign-in-alt mr-1"></i>Login
+                            <i class="fas fa-sign-in-alt mr-1"></i>Sign In
                         </a>
                         <a href="{{ url_for('register') }}" class="bg-[#28a745] hover:bg-green-700 text-white px-4 py-2 rounded">
-                            <i class="fas fa-user-plus mr-1"></i>Register
+                            <i class="fas fa-user-plus mr-1"></i>Sign Up
                         </a>
                     {% endif %}
                 </div>
