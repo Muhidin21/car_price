@@ -3,61 +3,59 @@
 {% block title %}User Dashboard - Car Price Prediction{% endblock %}
 
 {% block content %}
-<div class="flex min-h-[calc(100vh-6rem)]">
+<div class="flex min-h-screen">
     <!-- Sidebar -->
-    <aside class="w-64 bg-gray-900 text-white flex-shrink-0">
-        <div class="p-6 border-b border-gray-800">
+    <aside class="sidebar text-white shadow-glow">
+        <div class="p-6 border-b border-blue-700/30">
             <div class="flex items-center space-x-3">
-                <div class="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center">
-                    <i class="fas fa-user"></i>
+                <div class="h-10 w-10 rounded-full glass-effect flex items-center justify-center">
+                    <i class="fas fa-user text-green-300"></i>
                 </div>
                 <div>
-                    <div class="text-sm text-gray-300">Signed in as</div>
-                    <div class="font-semibold">{{ session.username }}</div>
+                    <div class="text-sm text-blue-200">Signed in as</div>
+                    <div class="font-semibold text-white">{{ session.username }}</div>
                 </div>
             </div>
         </div>
 
         <nav class="p-4 space-y-2">
-            <a href="{{ url_for('user_dashboard') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-800 {% if request.endpoint == 'user_dashboard' %}bg-gray-800{% endif %}">
-                <i class="fas fa-gauge-high w-6"></i>
-                <span>Dashboard</span>
-            </a>
-            <a href="{{ url_for('predict') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-800">
-                <i class="fas fa-calculator w-6"></i>
-                <span>Predict</span>
-            </a>
-            <a href="{{ url_for('user_profile') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-800">
-                <i class="fas fa-id-badge w-6"></i>
-                <span>Profile</span>
-            </a>
-            <a href="{{ url_for('logout') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-800 text-red-300">
-                <i class="fas fa-sign-out-alt w-6"></i>
-                <span>Logout</span>
-            </a>
+            <button onclick="showSection('dashboard')" class="flex items-center px-3 py-3 rounded-lg hover:bg-blue-600/30 transition-all duration-300 w-full text-left bg-blue-600/30 shadow-glow">
+                <i class="fas fa-gauge-high w-6 text-green-300"></i>
+                <span class="ml-2">Dashboard</span>
+            </button>
+            <button onclick="showSection('predict')" class="flex items-center px-3 py-3 rounded-lg hover:bg-blue-600/30 transition-all duration-300 w-full text-left">
+                <i class="fas fa-calculator w-6 text-green-300"></i>
+                <span class="ml-2">Predict</span>
+            </button>
+            <button onclick="showSection('visualize')" class="flex items-center px-3 py-3 rounded-lg hover:bg-blue-600/30 transition-all duration-300 w-full text-left">
+                <i class="fas fa-chart-bar w-6 text-green-300"></i>
+                <span class="ml-2">Visualize</span>
+            </button>
         </nav>
     </aside>
 
     <!-- Main content -->
-    <section class="flex-1 p-6 bg-gray-50">
-        <!-- Stat cards -->
-        <div class="grid md:grid-cols-3 gap-6 mb-6">
-            <a href="{{ url_for('predict') }}" class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow group">
-                <div class="flex items-center">
-                    <div class="bg-green-100 p-3 rounded-full group-hover:bg-green-200 transition-colors">
-                        <i class="fas fa-calculator text-[#28a745] text-xl"></i>
+    <section class="flex-1 ml-[250px] mt-16 p-6 bg-gradient-to-br from-blue-50 via-white to-green-50">
+        <!-- Dashboard Section -->
+        <div id="section-dashboard" class="section">
+            <!-- Stat cards -->
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <button onclick="showSection('predict')" class="card-gradient p-6 rounded-xl shadow-glow border border-gray-200 hover-lift group w-full text-left">
+                    <div class="flex items-center">
+                        <div class="bg-gradient-to-br from-green-500 to-green-600 p-4 rounded-full group-hover:shadow-glow transition-all duration-300">
+                            <i class="fas fa-calculator text-white text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg font-semibold text-gray-800">New Prediction</h3>
+                            <p class="text-gray-600">Predict car price</p>
+                        </div>
                     </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-800">New Prediction</h3>
-                        <p class="text-gray-600">Predict car price</p>
-                    </div>
-                </div>
-            </a>
+                </button>
 
-            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div class="card-gradient p-6 rounded-xl shadow-glow border border-gray-200 hover-lift">
                 <div class="flex items-center">
-                    <div class="bg-blue-100 p-3 rounded-full">
-                        <i class="fas fa-history text-blue-600 text-xl"></i>
+                    <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-4 rounded-full shadow-glow">
+                        <i class="fas fa-history text-white text-xl"></i>
                     </div>
                     <div class="ml-4">
                         <h3 class="text-lg font-semibold text-gray-800">{{ predictions|length }}</h3>
@@ -66,36 +64,15 @@
                 </div>
             </div>
 
-            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                <div class="flex items-center">
-                    <div class="bg-purple-100 p-3 rounded-full">
-                        <i class="fas fa-chart-line text-purple-600 text-xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-800">
-                            {% if predictions %}
-                                ${{ "%.0f"|format(predictions|map(attribute='predicted_price')|list|sum / predictions|length) }}
-                            {% else %}
-                                $0
-                            {% endif %}
-                        </h3>
-                        <p class="text-gray-600">Avg. Prediction</p>
-                    </div>
-                </div>
-            </div>
+
         </div>
 
         <!-- Recent Predictions -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+        <div class="card-gradient rounded-xl shadow-glow border border-gray-200">
+            <div class="p-6 border-b border-gray-200">
                 <h2 class="text-2xl font-bold text-gray-800">
                     <i class="fas fa-history mr-2 text-blue-600"></i>Recent Predictions
                 </h2>
-                {% if predictions %}
-                    <button onclick="exportPredictions()" class="bg-[#1e90ff] hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
-                        <i class="fas fa-download mr-2"></i>Export
-                    </button>
-                {% endif %}
             </div>
 
             <div class="p-6">
@@ -120,7 +97,7 @@
                                     data-engine="{{ prediction.engine_size }}"
                                     data-mpg="{{ prediction.mpg }}"
                                     data-mileage="{{ prediction.mileage }}"
-                                    data-tax="{{ prediction.tax }}"
+
                                     data-trans="{{ 1 if prediction.transmission_manual == 1 else 0 }}"
                                     data-price="{{ prediction.predicted_price }}">
                                     <td class="px-4 py-4 text-sm text-gray-600">
@@ -128,7 +105,7 @@
                                         <span class="text-xs text-gray-400">{{ prediction.created_at.strftime('%H:%M') }}</span>
                                     </td>
                                     <td class="px-4 py-4">
-                                        <div class="text-sm font-medium text-gray-800">{{ prediction.year }} Model</div>
+                                        <div class="text-sm font-medium text-gray-800">{{ prediction.year }} </div>
                                         <div class="text-xs text-gray-600">
                                             Engine: {{ prediction.engine_size }}L | 
                                             {% if prediction.transmission_manual == 1 %}Manual{% else %}Automatic{% endif %}
@@ -137,7 +114,7 @@
                                     <td class="px-4 py-4 text-sm text-gray-600">
                                         <div>{{ "{:,}".format(prediction.mileage) }} miles</div>
                                         <div>{{ prediction.mpg }} MPG</div>
-                                        <div>${{ prediction.tax }} tax</div>
+
                                     </td>
                                     <td class="px-4 py-4">
                                         <div class="text-lg font-bold text-[#28a745]">
@@ -170,10 +147,7 @@
                     <div class="text-center py-12">
                         <i class="fas fa-chart-line text-6xl text-gray-300 mb-4"></i>
                         <h3 class="text-xl font-semibold text-gray-600 mb-2">No predictions yet</h3>
-                        <p class="text-gray-500 mb-6">Start by making your first car price prediction!</p>
-                        <a href="{{ url_for('predict') }}" 
-                           class="bg-[#1e90ff] hover:bg-blue-700 text-white px-6 py-3 rounded-lg inline-block">
-                            <i class="fas fa-calculator mr-2"></i>Make First Prediction
+                        
                         </a>
                     </div>
                 {% endif %}
@@ -184,6 +158,269 @@
         {% if predictions %}
         
         {% endif %}
+        </div>
+
+        <!-- Predict Section -->
+        <div id="section-predict" class="section hidden">
+            <div class="mb-6">
+                <h2 class="text-xl font-semibold text-gray-900">Car Price Prediction</h2>
+                <p class="text-sm text-gray-600">Enter car details to get price prediction</p>
+            </div>
+            
+            <div class="grid lg:grid-cols-2 gap-6 lg:gap-8">
+                <!-- Prediction Form -->
+                <div class="card-gradient rounded-xl shadow-glow p-4 sm:p-6 lg:p-8 border border-gray-200">
+                    <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6">
+                        <i class="fas fa-car mr-2 text-green-600"></i>Car Details
+                    </h2>
+
+                    <!-- Form Progress -->
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-700">Form Completion</span>
+                            <span id="progress-text" class="text-sm text-gray-500">0/7 fields</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div id="progress-bar" class="bg-green-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Validation Summary -->
+                    <div id="validation-summary" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 hidden">
+                        <div class="flex items-start">
+                            <i class="fas fa-exclamation-triangle text-red-500 mt-1 mr-3"></i>
+                            <div>
+                                <h3 class="text-red-800 font-semibold mb-2">Please fix the following errors:</h3>
+                                <ul id="validation-errors-list" class="text-red-700 text-sm space-y-1"></ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('user_dashboard') }}" id="dashboardPredictForm" class="space-y-4 sm:space-y-6" novalidate>
+                        <!-- Year -->
+                        <div>
+                            <label for="year" class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-calendar-alt mr-2 text-blue-600"></i>Year of Manufacture
+                            </label>
+                            <input type="number" 
+                                   id="year" 
+                                   name="year" 
+                                   min="1990" 
+                                   max="2024" 
+                                   required 
+                                   class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400"
+                                   placeholder="e.g., 2020">
+                            <p class="text-xs text-gray-500 mt-1">Enter year between 1990-2024</p>
+                            <div id="year-error" class="text-red-500 text-sm mt-1 hidden"></div>
+                        </div>
+
+                        <!-- Engine Size -->
+                        <div>
+                            <label for="engine_size" class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-cog mr-2 text-blue-600"></i>Engine Size (Liters)
+                            </label>
+                            <input type="number" 
+                                   id="engine_size" 
+                                   name="engine_size" 
+                                   step="0.1" 
+                                   min="0.5" 
+                                   max="3.0" 
+                                   required 
+                                   class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400"
+                                   placeholder="e.g., 1.5">
+                            <p class="text-xs text-gray-500 mt-1">Engine displacement in liters (max 3.0L)</p>
+                            <div id="engine_size-error" class="text-red-500 text-sm mt-1 hidden"></div>
+                        </div>
+
+
+
+                        <!-- Mileage -->
+                        <div>
+                            <label for="mileage" class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-road mr-2 text-blue-600"></i>Mileage
+                            </label>
+                            <input type="number" 
+                                   id="mileage" 
+                                   name="mileage" 
+                                   min="0" 
+                                   max="200000" 
+                                   required 
+                                   class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400"
+                                   placeholder="e.g., 50000">
+                            <p class="text-xs text-gray-500 mt-1">Total miles driven</p>
+                            <div id="mileage-error" class="text-red-500 text-sm mt-1 hidden"></div>
+                        </div>
+
+                        <!-- MPG -->
+                        <div>
+                            <label for="mpg" class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-gas-pump mr-2 text-blue-600"></i>MPG (Miles Per Gallon)
+                            </label>
+                            <input type="number" 
+                                   id="mpg" 
+                                   name="mpg" 
+                                   min="10" 
+                                   max="100" 
+                                   required 
+                                   class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400"
+                                   placeholder="e.g., 35">
+                            <p class="text-xs text-gray-500 mt-1">Fuel efficiency in miles per gallon</p>
+                            <div id="mpg-error" class="text-red-500 text-sm mt-1 hidden"></div>
+                        </div>
+
+                        <!-- Transmission -->
+                        <div>
+                            <label for="transmission_manual" class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-cogs mr-2 text-blue-600"></i>Transmission
+                            </label>
+                            <select id="transmission_manual" 
+                                    name="transmission_manual" 
+                                    required 
+                                    class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400">
+                                <option value="">Select transmission type</option>
+                                <option value="0">Automatic</option>
+                                <option value="1">Manual</option>
+                            </select>
+                            <div id="transmission_manual-error" class="text-red-500 text-sm mt-1 hidden"></div>
+                        </div>
+
+                        <!-- Fuel Type -->
+                        <div>
+                            <label for="fuel_type" class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-fire mr-2 text-blue-600"></i>Fuel Type
+                            </label>
+                            <select id="fuel_type" 
+                                    name="fuel_type" 
+                                    required 
+                                    class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400">
+                                <option value="">Select fuel type</option>
+                                <option value="Petrol">Petrol</option>
+                                <option value="Diesel">Diesel</option>
+                                <option value="Hybrid">Hybrid</option>
+                                <option value="Electric">Electric</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <div id="fuel_type-error" class="text-red-500 text-sm mt-1 hidden"></div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="button" 
+                                id="dashboardSubmitBtn"
+                                onclick="submitPredictionForm()"
+                                class="w-full button-gradient text-white py-3 sm:py-4 px-6 rounded-lg font-semibold hover:shadow-glow transition-all duration-300 text-base sm:text-lg">
+                            <i class="fas fa-calculator mr-2"></i>Predict Price
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Prediction Result -->
+                <div class="card-gradient rounded-xl shadow-glow p-4 sm:p-6 lg:p-8 border border-gray-200">
+                    <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6">
+                        <i class="fas fa-chart-line mr-2 text-blue-600"></i>Prediction Result
+                    </h2>
+
+                    {% if predicted_price %}
+                        <div class="text-center py-8 sm:py-12">
+                            <div class="mb-6">
+                                <i class="fas fa-chart-line text-6xl sm:text-7xl text-green-500 mb-4"></i>
+                                <h3 class="text-3xl sm:text-4xl font-bold text-green-600 mb-2">
+                                    ${{ "{:,.2f}".format(predicted_price) }}
+                                </h3>
+                                <p class="text-lg sm:text-xl font-semibold text-gray-700 mb-4">Predicted Price</p>
+                                
+                                {% if form_data %}
+                                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-6">
+                                    <h4 class="font-semibold text-gray-800 mb-3">Car Details Used:</h4>
+                                    <div class="grid grid-cols-2 gap-2 text-sm text-gray-600">
+                                        <div><span class="font-medium">Year:</span> {{ form_data.year }}</div>
+                                        <div><span class="font-medium">Engine:</span> {{ form_data.engine_size }}L</div>
+                                        <div><span class="font-medium">Mileage:</span> {{ "{:,}".format(form_data.mileage) }} miles</div>
+                                        <div><span class="font-medium">MPG:</span> {{ form_data.mpg }}</div>
+
+                                        <div><span class="font-medium">Transmission:</span> {% if form_data.transmission_manual == 1 %}Manual{% else %}Automatic{% endif %}</div>
+                                        <div><span class="font-medium">Fuel:</span> {{ form_data.fuel_type }}</div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-8 sm:py-12">
+                            <div class="mb-6">
+                                <i class="fas fa-car text-6xl sm:text-7xl text-gray-300 mb-4"></i>
+                                <h3 class="text-lg sm:text-xl font-semibold text-gray-600 mb-2">Ready to Predict</h3>
+                                <p class="text-gray-500 text-sm sm:text-base">Fill in the car details on the left to get your price prediction</p>
+                            </div>
+                            
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div class="flex items-center justify-center text-blue-700">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    <span class="text-sm sm:text-base">Enter accurate car information for best results</span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Visualize Section -->
+        <div id="section-visualize" class="section hidden">
+            <div class="mb-6">
+                <h2 class="text-xl font-semibold text-gray-900">Data Visualization</h2>
+                <p class="text-sm text-gray-600">Basic charts and graphs of your prediction data</p>
+            </div>
+            
+            <!-- Key Metrics -->
+            <div class="grid md:grid-cols-2 gap-4 mb-6">
+                <div class="bg-green-100 border border-green-300 rounded-lg p-4">
+                    <div class="text-2xl font-bold text-green-600" id="totalPredictionsMetric">0</div>
+                    <div class="text-sm text-green-700">Total Predictions</div>
+                </div>
+                <div class="bg-purple-100 border border-purple-300 rounded-lg p-4">
+                    <div class="text-2xl font-bold text-purple-600" id="priceRangeMetric">$0</div>
+                    <div class="text-sm text-purple-700">Price Range</div>
+                </div>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <!-- Price Distribution Bar Plot -->
+                <div class="bg-white border border-gray-300 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Price Distribution (Bar Plot)</h3>
+                    <div class="h-64" id="priceDistributionChart">
+                        <div class="flex items-end justify-center h-full space-x-2" id="priceBars"></div>
+                    </div>
+                </div>
+                
+                <!-- Engine Size vs Price Bar Plot -->
+                <div class="bg-white border border-gray-300 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Engine Size vs Price (Bar Plot)</h3>
+                    <div class="h-64" id="engineSizeChart">
+                        <div class="flex items-end justify-center h-full space-x-2" id="engineBars"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <!-- Transmission Comparison Bar Plot -->
+                <div class="bg-white border border-gray-300 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Transmission Comparison (Bar Plot)</h3>
+                    <div class="h-64" id="transmissionChart">
+                        <div class="flex items-end justify-center h-full space-x-8" id="transmissionBars"></div>
+                    </div>
+                </div>
+                
+                <!-- Price Trends Line Plot -->
+                <div class="bg-white border border-gray-300 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Price Trends (Line Plot)</h3>
+                    <div class="h-64" id="priceTrendsChart">
+                        <svg class="w-full h-full" id="trendsSvg"></svg>
+                    </div>
+                </div>
+            </div>
+            
+
+        </div>
     </section>
 </div>
 
@@ -203,6 +440,404 @@
 </div>
 
 <script>
+// Dashboard Form Validation
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('dashboardPredictForm');
+    const submitBtn = document.getElementById('dashboardSubmitBtn');
+    
+    if (!form || !submitBtn) return;
+    
+    // Validation rules
+    const validationRules = {
+        year: {
+            required: true,
+            min: 1990,
+            max: 2024,
+            message: 'Year must be between 1990 and 2024'
+        },
+        engine_size: {
+            required: true,
+            min: 0.5,
+            max: 3.0,
+            message: 'Engine size must be between 0.5 and 3.0 liters'
+        },
+
+        mileage: {
+            required: true,
+            min: 0,
+            max: 200000,
+            message: 'Mileage must be between 0 and 200,000'
+        },
+        mpg: {
+            required: true,
+            min: 10,
+            max: 100,
+            message: 'MPG must be between 10 and 100'
+        },
+        transmission_manual: {
+            required: true,
+            message: 'Please select a transmission type'
+        },
+        fuel_type: {
+            required: true,
+            message: 'Please select a fuel type'
+        }
+    };
+
+    // Show error message
+    function showError(fieldId, message) {
+        const errorDiv = document.getElementById(fieldId + '-error');
+        const field = document.getElementById(fieldId);
+        
+        if (errorDiv) {
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+        
+        if (field) {
+            field.classList.add('border-red-500');
+            field.classList.remove('border-gray-300');
+        }
+    }
+
+    // Hide error message
+    function hideError(fieldId) {
+        const errorDiv = document.getElementById(fieldId + '-error');
+        const field = document.getElementById(fieldId);
+        
+        if (errorDiv) {
+            errorDiv.classList.add('hidden');
+        }
+        
+        if (field) {
+            field.classList.remove('border-red-500');
+            field.classList.add('border-gray-300');
+        }
+        
+        // Check if all errors are cleared and hide summary
+        const allErrors = Object.keys(validationRules).every(fieldId => {
+            const errorDiv = document.getElementById(fieldId + '-error');
+            return !errorDiv || errorDiv.classList.contains('hidden');
+        });
+        
+        if (allErrors) {
+            document.getElementById('validation-summary').classList.add('hidden');
+        }
+    }
+
+    // Validate single field
+    function validateField(fieldId) {
+        const field = document.getElementById(fieldId);
+        const value = field.value.trim();
+        const rules = validationRules[fieldId];
+        
+        if (!rules) return true;
+        
+        // Check if required
+        if (rules.required && !value) {
+            showError(fieldId, rules.message || 'This field is required');
+            return false;
+        }
+        
+        // Check numeric ranges
+        if (rules.min !== undefined || rules.max !== undefined) {
+            const numValue = parseFloat(value);
+            if (isNaN(numValue)) {
+                showError(fieldId, 'Please enter a valid number');
+                return false;
+            }
+            
+            if (rules.min !== undefined && numValue < rules.min) {
+                showError(fieldId, rules.message || `Value must be at least ${rules.min}`);
+                return false;
+            }
+            
+            if (rules.max !== undefined && numValue > rules.max) {
+                showError(fieldId, rules.message || `Value must be at most ${rules.max}`);
+                return false;
+            }
+        }
+        
+        // Check select fields
+        if (field.tagName === 'SELECT' && value === '') {
+            showError(fieldId, rules.message || 'Please select an option');
+            return false;
+        }
+        
+        hideError(fieldId);
+        return true;
+    }
+
+    // Update progress bar
+    function updateProgress() {
+        let completedFields = 0;
+        const totalFields = Object.keys(validationRules).length;
+        
+        Object.keys(validationRules).forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            const value = field.value.trim();
+            
+            if (value && validateField(fieldId)) {
+                completedFields++;
+            }
+        });
+        
+        const progressPercentage = (completedFields / totalFields) * 100;
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        
+        if (progressBar && progressText) {
+            progressBar.style.width = progressPercentage + '%';
+            progressText.textContent = `${completedFields}/${totalFields} fields`;
+            
+            // Change color based on completion
+            if (progressPercentage === 100) {
+                progressBar.classList.remove('bg-yellow-500', 'bg-green-600');
+                progressBar.classList.add('bg-green-600');
+            } else if (progressPercentage >= 70) {
+                progressBar.classList.remove('bg-yellow-500', 'bg-green-600');
+                progressBar.classList.add('bg-yellow-500');
+    } else {
+                progressBar.classList.remove('bg-yellow-500', 'bg-green-600');
+                progressBar.classList.add('bg-green-600');
+            }
+        }
+    }
+
+    // Validate all fields
+    function validateForm() {
+        let isValid = true;
+        const errors = [];
+        
+        Object.keys(validationRules).forEach(fieldId => {
+            if (!validateField(fieldId)) {
+                isValid = false;
+                const errorDiv = document.getElementById(fieldId + '-error');
+                if (errorDiv && errorDiv.textContent) {
+                    errors.push(errorDiv.textContent);
+                }
+            }
+        });
+        
+        // Show/hide validation summary
+        const summaryDiv = document.getElementById('validation-summary');
+        const errorsList = document.getElementById('validation-errors-list');
+        
+        if (!isValid && errors.length > 0) {
+            errorsList.innerHTML = '';
+            errors.forEach(error => {
+                const li = document.createElement('li');
+                li.textContent = `• ${error}`;
+                errorsList.appendChild(li);
+            });
+            summaryDiv.classList.remove('hidden');
+        } else {
+            summaryDiv.classList.add('hidden');
+        }
+        
+        return isValid;
+    }
+
+    // Add event listeners for real-time validation
+    Object.keys(validationRules).forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('blur', () => {
+                validateField(fieldId);
+                updateProgress();
+            });
+            field.addEventListener('input', () => {
+                if (document.getElementById(fieldId + '-error').classList.contains('hidden')) {
+                    updateProgress();
+                    return; // Don't validate on every input if no error is shown
+                }
+                validateField(fieldId);
+                updateProgress();
+            });
+            field.addEventListener('change', () => {
+                validateField(fieldId);
+                updateProgress();
+            });
+            
+            // Add formatting for numeric fields
+            if (field.type === 'number') {
+                field.addEventListener('focus', () => {
+                    field.select(); // Select all text when focused
+                });
+            }
+        }
+    });
+    
+    // Initialize progress on page load
+    updateProgress();
+    
+    // Override the submitPredictionForm function to include validation
+    window.submitPredictionForm = function() {
+        if (!validateForm()) {
+            // Show first error field
+            const firstErrorField = Object.keys(validationRules).find(fieldId => {
+                const errorDiv = document.getElementById(fieldId + '-error');
+                return errorDiv && !errorDiv.classList.contains('hidden');
+            });
+            
+            if (firstErrorField) {
+                document.getElementById(firstErrorField).focus();
+            }
+            
+            // Disable submit button temporarily
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Validating...';
+            
+            setTimeout(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-calculator mr-2"></i>Predict Price';
+            }, 2000);
+            
+            return false;
+        }
+        
+        // If valid, show loading state and proceed with original function
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+        
+        // Call the original submitPredictionForm logic
+        const form = document.querySelector('#section-predict form');
+        const resultSection = document.querySelector('#section-predict .card-gradient:last-child');
+        
+        if (!form || !resultSection) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-calculator mr-2"></i>Predict Price';
+        return;
+    }
+    
+    // Get form data
+    const formData = new FormData(form);
+    
+    // Submit form via fetch
+    fetch('{{ url_for("user_dashboard") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        return response.text();
+    })
+    .then(html => {
+        // Create a temporary div to parse the HTML response
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        
+        // Try multiple selectors to find the result section
+        let newResultSection = tempDiv.querySelector('#section-predict .card-gradient:last-child');
+        
+        if (!newResultSection) {
+            newResultSection = tempDiv.querySelector('#section-predict .card-gradient:nth-child(2)');
+        }
+        
+        if (!newResultSection) {
+            newResultSection = tempDiv.querySelector('.card-gradient');
+        }
+        
+        if (newResultSection) {
+            // Update the result section with the new prediction result
+            resultSection.innerHTML = newResultSection.innerHTML;
+            
+
+        } else {
+            // Show error message
+            resultSection.innerHTML = `
+                <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6">
+                    <i class="fas fa-chart-line mr-2 text-blue-600"></i>Prediction Result
+                </h2>
+                <div class="text-center py-8 sm:py-12">
+                    <div class="mb-6">
+                            <i class="fas fa-exclamation-triangle text-6xl sm:text-7xl text-red-300 mb-4"></i>
+                            <h3 class="text-lg sm:text-xl font-semibold text-red-600 mb-2">Error</h3>
+                            <p class="text-red-500 text-sm sm:text-base">Failed to process prediction. Please try again.</p>
+                    </div>
+                </div>
+            `;
+        }
+            
+            // Reset button
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-calculator mr-2"></i>Predict Price';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+            // Show error in result card
+        const resultSection = document.querySelector('#section-predict .card-gradient:last-child');
+        resultSection.innerHTML = `
+            <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6">
+                <i class="fas fa-chart-line mr-2 text-blue-600"></i>Prediction Result
+            </h2>
+            <div class="text-center py-8 sm:py-12">
+                <div class="mb-6">
+                    <i class="fas fa-exclamation-triangle text-6xl sm:text-7xl text-red-300 mb-4"></i>
+                    <h3 class="text-lg sm:text-xl font-semibold text-red-600 mb-2">Error</h3>
+                    <p class="text-red-500 text-sm sm:text-base">Failed to process prediction. Please try again.</p>
+                </div>
+            </div>
+        `;
+            
+            // Reset button
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-calculator mr-2"></i>Predict Price';
+        });
+    };
+});
+
+function showSection(sectionName) {
+    console.log('showSection called with:', sectionName);
+    
+    // Hide all sections
+    const sections = document.querySelectorAll('.section');
+    console.log('Found sections:', sections.length);
+    sections.forEach(section => {
+        section.classList.add('hidden');
+    });
+    
+    // Show the selected section
+    const selectedSection = document.getElementById(`section-${sectionName}`);
+    console.log('Selected section:', selectedSection);
+    if (selectedSection) {
+        selectedSection.classList.remove('hidden');
+        console.log('Section shown successfully');
+    } else {
+        console.error('Section not found:', `section-${sectionName}`);
+    }
+    
+    // Update button styles
+    const buttons = document.querySelectorAll('nav button');
+    buttons.forEach(button => {
+        button.classList.remove('bg-blue-600/30', 'shadow-glow');
+    });
+    
+    // Highlight the clicked button
+    const clickedButton = event.target.closest('button');
+    if (clickedButton) {
+        clickedButton.classList.add('bg-blue-600/30', 'shadow-glow');
+    }
+}
+
+// Original submitPredictionForm function has been replaced with validated version above
+
+function showNotification(message, type) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
+        type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+    }`;
+    notification.innerHTML = message;
+    
+    // Add to page
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
 function viewDetails(buttonEl) {
     const tr = buttonEl.closest('tr');
     if (!tr) return;
@@ -212,7 +847,7 @@ function viewDetails(buttonEl) {
     const engine = get('data-engine');
     const mpg = get('data-mpg');
     const mileage = Number(get('data-mileage', 0)).toLocaleString();
-    const tax = get('data-tax');
+
     const trans = get('data-trans') === '1' ? 'Manual' : 'Automatic';
     const price = Number(get('data-price', 0)).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
 
@@ -227,7 +862,7 @@ function viewDetails(buttonEl) {
             <div><span class="font-semibold">Engine Size:</span> ${engine} L</div>
             <div><span class="font-semibold">MPG:</span> ${mpg}</div>
             <div><span class="font-semibold">Mileage:</span> ${mileage} miles</div>
-            <div><span class="font-semibold">Tax:</span> $${tax}</div>
+
             <div><span class="font-semibold">Transmission:</span> ${trans}</div>
             <div><span class="font-semibold">Predicted Price:</span> $${price}</div>
         </div>
@@ -297,5 +932,511 @@ async function loadMorePredictions() {
         alert('Failed to load more predictions.');
     }
 }
+
+// Visualization Functions
+function loadUserVisualizationData() {
+    // Get user's prediction data from the table
+    const predictionRows = document.querySelectorAll('#predictionsBody tr[data-price]');
+    const predictions = [];
+    
+    predictionRows.forEach(row => {
+        const price = parseFloat(row.getAttribute('data-price'));
+        const year = parseInt(row.getAttribute('data-year'));
+        const engine = parseFloat(row.getAttribute('data-engine'));
+        const mpg = parseFloat(row.getAttribute('data-mpg'));
+        const mileage = parseInt(row.getAttribute('data-mileage'));
+
+        const transmission = row.getAttribute('data-trans') === '1';
+        const created = row.getAttribute('data-created');
+        
+        if (price > 0) {
+            predictions.push({
+                price: price,
+                year: year,
+                engine_size: engine,
+                mpg: mpg,
+                mileage: mileage,
+
+                transmission_manual: transmission,
+                created_at: created
+            });
+        }
+    });
+    
+    if (predictions.length > 0) {
+        updateUserVisualizationCharts(predictions);
+        updateUserInsights(predictions);
+    } else {
+        showNoDataMessage();
+    }
+}
+
+function updateUserVisualizationCharts(predictions) {
+    // Update key metrics
+    updateKeyMetrics(predictions);
+    
+    // Draw basic charts
+    drawPriceDistributionBarPlot(predictions);
+    drawEngineSizeBarPlot(predictions);
+    drawTransmissionBarPlot(predictions);
+    drawPriceTrendsLinePlot(predictions);
+}
+
+function updateKeyMetrics(predictions) {
+    const prices = predictions.map(p => p.price);
+    const avgPrice = prices.reduce((sum, p) => sum + p, 0) / prices.length;
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    const latestPrediction = predictions[predictions.length - 1];
+    
+    document.getElementById('totalPredictionsMetric').textContent = predictions.length;
+    document.getElementById('priceRangeMetric').textContent = '$' + Math.round(minPrice).toLocaleString() + ' - $' + Math.round(maxPrice).toLocaleString();
+}
+
+function drawPriceDistributionBarPlot(predictions) {
+    const container = document.getElementById('priceBars');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (predictions.length === 0) {
+        container.innerHTML = '<div class="text-gray-500 text-center">No data available</div>';
+        return;
+    }
+    
+    // Create price ranges with fixed buckets
+    const prices = predictions.map(p => p.price);
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    
+    // Use fixed price ranges for better visualization
+    const priceRanges = [
+        { min: 0, max: 5000, label: '$0-5k' },
+        { min: 5000, max: 10000, label: '$5k-10k' },
+        { min: 10000, max: 15000, label: '$10k-15k' },
+        { min: 15000, max: 20000, label: '$15k-20k' },
+        { min: 20000, max: 50000, label: '$20k+' }
+    ];
+    
+    const buckets = priceRanges.map(range => {
+        const count = prices.filter(p => p >= range.min && p < range.max).length;
+        return {
+            range: range.label,
+            count: count
+        };
+    });
+    
+    const maxCount = Math.max(...buckets.map(b => b.count));
+    
+    buckets.forEach(bucket => {
+        const barHeight = maxCount > 0 ? (bucket.count / maxCount) * 200 : 0;
+        const bar = document.createElement('div');
+        bar.className = 'bg-blue-500 rounded-t';
+        bar.style.width = '40px';
+        bar.style.height = `${barHeight}px`;
+        bar.title = `${bucket.range}: ${bucket.count} cars`;
+        
+        const countLabel = document.createElement('div');
+        countLabel.className = 'text-xs text-gray-800 font-medium text-center';
+        countLabel.textContent = bucket.count;
+        
+        const label = document.createElement('div');
+        label.className = 'text-xs text-gray-600 mt-1 text-center';
+        label.textContent = bucket.range;
+        
+        const wrapper = document.createElement('div');
+        wrapper.className = 'flex flex-col items-center';
+        wrapper.appendChild(bar);
+        wrapper.appendChild(countLabel);
+        wrapper.appendChild(label);
+        
+        container.appendChild(wrapper);
+    });
+}
+
+function drawEngineSizeBarPlot(predictions) {
+    const container = document.getElementById('engineBars');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (predictions.length === 0) {
+        container.innerHTML = '<div class="text-gray-500 text-center">No data available</div>';
+        return;
+    }
+    
+    // Group by engine size ranges
+    const engineRanges = [
+        { min: 0.5, max: 1.0, label: '0.5-1.0L', color: 'bg-blue-500' },
+        { min: 1.0, max: 1.5, label: '1.0-1.5L', color: 'bg-green-500' },
+        { min: 1.5, max: 2.0, label: '1.5-2.0L', color: 'bg-yellow-500' },
+        { min: 2.0, max: 2.5, label: '2.0-2.5L', color: 'bg-red-500' },
+        { min: 2.5, max: 3.0, label: '2.5-3.0L', color: 'bg-purple-500' }
+    ];
+    
+    const engineData = engineRanges.map(range => {
+        const matchingPredictions = predictions.filter(p => p.engine_size >= range.min && p.engine_size < range.max);
+        const avgPrice = matchingPredictions.length > 0 ? 
+            matchingPredictions.reduce((sum, p) => sum + p.price, 0) / matchingPredictions.length : 0;
+        return { ...range, avgPrice, count: matchingPredictions.length };
+    }).filter(data => data.count > 0);
+    
+    if (engineData.length === 0) {
+        container.innerHTML = '<div class="text-gray-500 text-center">No engine size data</div>';
+        return;
+    }
+    
+    const maxPrice = Math.max(...engineData.map(d => d.avgPrice));
+    
+    engineData.forEach(data => {
+        const barHeight = maxPrice > 0 ? (data.avgPrice / maxPrice) * 200 : 0;
+        const bar = document.createElement('div');
+        bar.className = `${data.color} rounded-t`;
+        bar.style.width = '40px';
+        bar.style.height = `${barHeight}px`;
+        bar.title = `${data.label}: $${Math.round(data.avgPrice).toLocaleString()}`;
+        
+        const priceLabel = document.createElement('div');
+        priceLabel.className = 'text-xs text-gray-800 font-medium text-center';
+        priceLabel.textContent = '$' + Math.round(data.avgPrice).toLocaleString();
+        
+        const label = document.createElement('div');
+        label.className = 'text-xs text-gray-600 mt-1 text-center';
+        label.textContent = data.label;
+        
+        const wrapper = document.createElement('div');
+        wrapper.className = 'flex flex-col items-center';
+        wrapper.appendChild(bar);
+        wrapper.appendChild(priceLabel);
+        wrapper.appendChild(label);
+        
+        container.appendChild(wrapper);
+    });
+}
+
+function drawTransmissionBarPlot(predictions) {
+    const container = document.getElementById('transmissionBars');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (predictions.length === 0) {
+        container.innerHTML = '<div class="text-gray-500 text-center">No data available</div>';
+        return;
+    }
+    
+    // Calculate average prices by transmission
+    const autoPredictions = predictions.filter(p => !p.transmission_manual);
+    const manualPredictions = predictions.filter(p => p.transmission_manual);
+    
+    const avgAuto = autoPredictions.length > 0 ? autoPredictions.reduce((sum, p) => sum + p.price, 0) / autoPredictions.length : 0;
+    const avgManual = manualPredictions.length > 0 ? manualPredictions.reduce((sum, p) => sum + p.price, 0) / manualPredictions.length : 0;
+    
+    // Only show bars if there's data
+    const hasAuto = autoPredictions.length > 0;
+    const hasManual = manualPredictions.length > 0;
+    
+    if (!hasAuto && !hasManual) {
+        container.innerHTML = '<div class="text-gray-500 text-center">No transmission data</div>';
+        return;
+    }
+    
+    const maxPrice = Math.max(avgAuto, avgManual);
+    
+    // Auto bar
+    if (hasAuto) {
+        const autoHeight = maxPrice > 0 ? (avgAuto / maxPrice) * 200 : 0;
+        const autoBar = document.createElement('div');
+        autoBar.className = 'bg-purple-500 rounded-t';
+        autoBar.style.width = '60px';
+        autoBar.style.height = `${autoHeight}px`;
+        autoBar.title = `Automatic: $${Math.round(avgAuto).toLocaleString()}`;
+        
+        const autoPrice = document.createElement('div');
+        autoPrice.className = 'text-sm text-gray-800 font-medium text-center';
+        autoPrice.textContent = '$' + Math.round(avgAuto).toLocaleString();
+        
+        const autoLabel = document.createElement('div');
+        autoLabel.className = 'text-sm text-gray-600 mt-1 text-center';
+        autoLabel.textContent = 'Automatic';
+        
+        const autoWrapper = document.createElement('div');
+        autoWrapper.className = 'flex flex-col items-center';
+        autoWrapper.appendChild(autoBar);
+        autoWrapper.appendChild(autoPrice);
+        autoWrapper.appendChild(autoLabel);
+        
+        container.appendChild(autoWrapper);
+    }
+    
+    // Manual bar
+    if (hasManual) {
+        const manualHeight = maxPrice > 0 ? (avgManual / maxPrice) * 200 : 0;
+        const manualBar = document.createElement('div');
+        manualBar.className = 'bg-yellow-500 rounded-t';
+        manualBar.style.width = '60px';
+        manualBar.style.height = `${manualHeight}px`;
+        manualBar.title = `Manual: $${Math.round(avgManual).toLocaleString()}`;
+        
+        const manualPrice = document.createElement('div');
+        manualPrice.className = 'text-sm text-gray-800 font-medium text-center';
+        manualPrice.textContent = '$' + Math.round(avgManual).toLocaleString();
+        
+        const manualLabel = document.createElement('div');
+        manualLabel.className = 'text-sm text-gray-600 mt-1 text-center';
+        manualLabel.textContent = 'Manual';
+        
+        const manualWrapper = document.createElement('div');
+        manualWrapper.className = 'flex flex-col items-center';
+        manualWrapper.appendChild(manualBar);
+        manualWrapper.appendChild(manualPrice);
+        manualWrapper.appendChild(manualLabel);
+        
+        container.appendChild(manualWrapper);
+    }
+}
+
+function drawPriceTrendsLinePlot(predictions) {
+    const svg = document.getElementById('trendsSvg');
+    if (!svg) return;
+    
+    svg.innerHTML = '';
+    
+    if (predictions.length === 0) {
+        svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#9CA3AF" font-size="16">No data available</text>';
+        return;
+    }
+    
+    // Sort predictions by date
+    const sortedPredictions = predictions.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    
+    if (sortedPredictions.length < 2) {
+        svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#9CA3AF" font-size="16">Need at least 2 predictions for trends</text>';
+        return;
+    }
+    
+    const width = 400;
+    const height = 200;
+    const padding = 40;
+    
+    const maxPrice = Math.max(...sortedPredictions.map(p => p.price));
+    const minPrice = Math.min(...sortedPredictions.map(p => p.price));
+    const priceRange = maxPrice - minPrice;
+    
+    // Create SVG
+    svg.setAttribute('width', width);
+    svg.setAttribute('height', height);
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    
+    // Draw axes
+    const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    xAxis.setAttribute('x1', padding);
+    xAxis.setAttribute('y1', height - padding);
+    xAxis.setAttribute('x2', width - padding);
+    xAxis.setAttribute('y2', height - padding);
+    xAxis.setAttribute('stroke', '#D1D5DB');
+    xAxis.setAttribute('stroke-width', '1');
+    svg.appendChild(xAxis);
+    
+    const yAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    yAxis.setAttribute('x1', padding);
+    yAxis.setAttribute('y1', padding);
+    yAxis.setAttribute('x2', padding);
+    yAxis.setAttribute('y2', height - padding);
+    yAxis.setAttribute('stroke', '#D1D5DB');
+    yAxis.setAttribute('stroke-width', '1');
+    svg.appendChild(yAxis);
+    
+    // Draw line
+    let pathData = '';
+    sortedPredictions.forEach((prediction, i) => {
+        const x = padding + (i / (sortedPredictions.length - 1)) * (width - 2 * padding);
+        const y = height - padding - ((prediction.price - minPrice) / priceRange) * (height - 2 * padding);
+        
+        if (i === 0) {
+            pathData = `M ${x} ${y}`;
+        } else {
+            pathData += ` L ${x} ${y}`;
+        }
+    });
+    
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', pathData);
+    path.setAttribute('stroke', '#10B981');
+    path.setAttribute('stroke-width', '3');
+    path.setAttribute('fill', 'none');
+    svg.appendChild(path);
+    
+    // Draw points
+    sortedPredictions.forEach((prediction, i) => {
+        const x = padding + (i / (sortedPredictions.length - 1)) * (width - 2 * padding);
+        const y = height - padding - ((prediction.price - minPrice) / priceRange) * (height - 2 * padding);
+        
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', x);
+        circle.setAttribute('cy', y);
+        circle.setAttribute('r', '4');
+        circle.setAttribute('fill', '#10B981');
+        svg.appendChild(circle);
+        
+        // Add price label
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', x);
+        text.setAttribute('y', y - 10);
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('fill', '#374151');
+        text.setAttribute('font-size', '10');
+        text.textContent = '$' + Math.round(prediction.price).toLocaleString();
+        svg.appendChild(text);
+    });
+    
+    // Add trend text
+    const firstPrice = sortedPredictions[0].price;
+    const lastPrice = sortedPredictions[sortedPredictions.length - 1].price;
+    const trend = lastPrice > firstPrice ? '↗️ Increasing' : lastPrice < firstPrice ? '↘️ Decreasing' : '→ Stable';
+    
+    const trendText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    trendText.setAttribute('x', 10);
+    trendText.setAttribute('y', 20);
+    trendText.setAttribute('fill', '#374151');
+    trendText.setAttribute('font-size', '14');
+    trendText.textContent = `Trend: ${trend}`;
+    svg.appendChild(trendText);
+}
+
+function drawYearPriceChart(predictions) {
+    const canvas = document.getElementById('yearPriceChart');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    
+    ctx.clearRect(0, 0, width, height);
+    
+    // Group by year ranges
+    const yearRanges = [
+        { min: 1990, max: 2000, label: '90s', color: '#EF4444' },
+        { min: 2000, max: 2010, label: '00s', color: '#F59E0B' },
+        { min: 2010, max: 2020, label: '10s', color: '#10B981' },
+        { min: 2020, max: 2025, label: '20s', color: '#3B82F6' }
+    ];
+    
+    const yearData = yearRanges.map(range => {
+        const matchingPredictions = predictions.filter(p => p.year >= range.min && p.year < range.max);
+        const avgPrice = matchingPredictions.length > 0 ? 
+            matchingPredictions.reduce((sum, p) => sum + p.price, 0) / matchingPredictions.length : 0;
+        return { ...range, avgPrice, count: matchingPredictions.length };
+    }).filter(data => data.count > 0);
+    
+    if (yearData.length === 0) return;
+    
+    const maxPrice = Math.max(...yearData.map(d => d.avgPrice));
+    const barWidth = (width - 100) / yearData.length;
+    
+    yearData.forEach((data, i) => {
+        const x = 50 + (i * barWidth);
+        const barHeight = (data.avgPrice / maxPrice) * (height - 100);
+        const y = height - 50 - barHeight;
+        
+        ctx.fillStyle = data.color;
+        ctx.fillRect(x, y, barWidth - 10, barHeight);
+        
+        ctx.fillStyle = '#374151';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(data.label, x + barWidth/2, height - 20);
+        ctx.fillText('$' + Math.round(data.avgPrice).toLocaleString(), x + barWidth/2, y - 10);
+    });
+}
+
+function drawMpgPriceChart(predictions) {
+    const canvas = document.getElementById('mpgPriceChart');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    
+    ctx.clearRect(0, 0, width, height);
+    
+    // Draw scatter plot for MPG vs Price
+    const maxMpg = Math.max(...predictions.map(p => p.mpg));
+    const maxPrice = Math.max(...predictions.map(p => p.price));
+    
+    predictions.forEach(prediction => {
+        const x = 50 + (prediction.mpg / maxMpg) * (width - 100);
+        const y = height - 50 - (prediction.price / maxPrice) * (height - 100);
+        
+        ctx.fillStyle = '#F59E0B';
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, 2 * Math.PI);
+        ctx.fill();
+    });
+    
+    // Draw labels
+    ctx.fillStyle = '#374151';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('MPG', width/2, height - 10);
+    ctx.save();
+    ctx.translate(20, height/2);
+    ctx.rotate(-Math.PI/2);
+    ctx.fillText('Price ($)', 0, 0);
+    ctx.restore();
+}
+
+
+
+
+
+function updateUserInsights(predictions) {
+    const prices = predictions.map(p => p.price);
+    const avgPrice = prices.reduce((sum, p) => sum + p, 0) / prices.length;
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    
+    document.getElementById('avgPriceInsight').textContent = '$' + Math.round(avgPrice).toLocaleString();
+    document.getElementById('totalPredictionsInsight').textContent = predictions.length;
+    document.getElementById('priceRangeInsight').textContent = '$' + Math.round(minPrice).toLocaleString() + ' - $' + Math.round(maxPrice).toLocaleString();
+}
+
+function showNoDataMessage() {
+    // Clear bar charts
+    const containers = ['priceBars', 'engineBars', 'transmissionBars'];
+    containers.forEach(containerId => {
+        const container = document.getElementById(containerId);
+        if (container) {
+            container.innerHTML = '<div class="text-gray-500 text-center">No data available</div>';
+        }
+    });
+    
+    // Clear line chart
+    const svg = document.getElementById('trendsSvg');
+    if (svg) {
+        svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#9CA3AF" font-size="16">No data available</text>';
+    }
+    
+    // Reset metrics
+    document.getElementById('totalPredictionsMetric').textContent = '0';
+    document.getElementById('priceRangeMetric').textContent = '$0';
+    
+
+}
+
+// Load visualization data when visualize section is shown
+document.addEventListener('DOMContentLoaded', function() {
+    // Override showSection to load visualization data
+    const originalShowSection = window.showSection;
+    window.showSection = function(sectionName) {
+        originalShowSection(sectionName);
+        
+        if (sectionName === 'visualize') {
+            setTimeout(() => {
+                loadUserVisualizationData();
+            }, 100);
+        }
+    };
+});
 </script>
 {% endblock %}

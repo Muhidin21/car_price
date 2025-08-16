@@ -18,10 +18,12 @@ class Config:
     PREDICTIONS_COLLECTION = 'predictions'
     
     # Model Configuration - default artifacts (update as needed)
-    # Available models saved by notebook: random_forest_model.pkl, xgb_model.pkl, gbr_model.pkl,
-    # hgb_model.pkl, decision_tree_model.pkl, linear_regression_model.pkl, catboost_model.pkl
-    # Set to Random Forest by default as per request, but app.py currently forces CatBoost explicitly.
-    MODEL_PATH = os.getenv('MODEL_PATH', 'random_forest_model.pkl')
+    # Available hypertuned models saved by notebook:
+    #   best_random_forest_model.pkl, best_xgboost_model.pkl, best_gradient_boosting_model.pkl,
+    #   best_decision_tree_model.pkl, best_catboost_model.pkl
+    # Baselines: hist_gradient_boosting_model.pkl, linear_regression_model.pkl
+    # Default to the requested Random Forest model
+    MODEL_PATH = os.getenv('MODEL_PATH', 'best_random_forest_model.pkl')
     SCALER_PATH = os.getenv('SCALER_PATH', 'scaler.pkl')
     FEATURES_PATH = os.getenv('FEATURES_PATH', 'selected_features.pkl')
     
@@ -34,10 +36,14 @@ class Config:
     MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER')
     
     # OTP Configuration
-    OTP_EXPIRY_MINUTES = 10
+    # Increased to reduce timeouts during verification
+    OTP_EXPIRY_MINUTES = 120
     
     # Email Domain Restrictions
     ALLOWED_EMAIL_DOMAINS = ['gmail.com']  # Only allow Gmail addresses
+    
+    # Email Validation Configuration
+    ENABLE_MX_CHECK = os.getenv('ENABLE_MX_CHECK', 'False').lower() == 'true'  # Enable DNS MX record checking
     
     @staticmethod
     def validate_config():
@@ -52,5 +58,7 @@ class Config:
         for p in [Config.MODEL_PATH, Config.SCALER_PATH, Config.FEATURES_PATH]:
             if not os.path.exists(p):
                 print(f"[WARN] Missing artifact: {p} (ensure correct file in project root or set env path)")
+            else:
+                print(f"[OK] Found artifact: {p}")
         
         return True

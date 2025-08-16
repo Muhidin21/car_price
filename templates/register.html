@@ -1,147 +1,239 @@
 {% extends "base.html" %}
 
-{% block title %}Sign Up - Car Price Prediction{% endblock %}
+{% block title %}Register - Car Price Prediction{% endblock %}
 
 {% block content %}
-<div class="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8">
-    <div class="text-center mb-8">
-        <i class="fas fa-user-plus text-4xl text-green-600 mb-4"></i>
-        <h2 class="text-3xl font-bold text-gray-800">Sign Up</h2>
-        <p class="text-gray-600 mt-2">Create your account</p>
-    </div>
+<div class="min-h-[calc(100vh-12rem)] flex items-center justify-center py-8">
+    <div class="w-full max-w-md">
+        <div class="card-gradient rounded-xl shadow-glow p-6 sm:p-8 border border-gray-200">
+            <div class="text-center mb-6">
+                <div class="bg-gradient-to-br from-green-500 to-blue-600 w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-glow">
+                    <i class="fas fa-user-plus text-white text-2xl sm:text-3xl"></i>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Create Account</h2>
+                <p class="text-gray-600 text-sm sm:text-base">Join us to start predicting car prices</p>
+            </div>
 
-    <form method="POST" class="space-y-6">
-        <div>
-            <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
-                <i class="fas fa-user mr-2"></i>Username
-            </label>
-            <input type="text" 
-                   id="username" 
-                   name="username" 
-                   required 
-                   minlength="3"
-                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                   placeholder="Choose a username">
+            <form method="POST" class="space-y-4 sm:space-y-6">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-user mr-2 text-blue-600"></i>Username
+                    </label>
+                    <input type="text" 
+                           id="username" 
+                           name="username" 
+                           required 
+                           minlength="3"
+                           maxlength="20"
+                           pattern="[a-zA-Z0-9_]+"
+                           class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400"
+                           placeholder="Choose a username (3-20 chars)">
+                    <p class="text-xs text-gray-500 mt-1">Letters, numbers, and underscores only</p>
+                </div>
+
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-envelope mr-2 text-blue-600"></i>Email Address
+                    </label>
+                    <input type="email" 
+                           id="email" 
+                           name="email" 
+                           required 
+                           class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400"
+                           placeholder="Enter your email address">
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-lock mr-2 text-blue-600"></i>Password
+                    </label>
+                    <input type="password" 
+                           id="password" 
+                           name="password" 
+                           required 
+                           minlength="8"
+                           class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400"
+                           placeholder="Create a strong password">
+                    
+                    <!-- Password Requirements -->
+                    <div class="mt-2 space-y-1">
+                        <p class="text-xs text-gray-500 font-medium">Password Requirements:</p>
+                        <div class="grid grid-cols-1 gap-1">
+                            <div class="flex items-center text-xs" id="req-length">
+                                <i class="fas fa-circle text-gray-300 mr-2"></i>
+                                <span class="text-gray-500">At least 8 characters</span>
+                            </div>
+                            <div class="flex items-center text-xs" id="req-uppercase">
+                                <i class="fas fa-circle text-gray-300 mr-2"></i>
+                                <span class="text-gray-500">One uppercase letter (A-Z)</span>
+                            </div>
+                            <div class="flex items-center text-xs" id="req-lowercase">
+                                <i class="fas fa-circle text-gray-300 mr-2"></i>
+                                <span class="text-gray-500">One lowercase letter (a-z)</span>
+                            </div>
+                            <div class="flex items-center text-xs" id="req-number">
+                                <i class="fas fa-circle text-gray-300 mr-2"></i>
+                                <span class="text-gray-500">One number (0-9)</span>
+                            </div>
+                            <div class="flex items-center text-xs" id="req-special">
+                                <i class="fas fa-circle text-gray-300 mr-2"></i>
+                                <span class="text-gray-500">One special character (!@#$%^&*)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="confirm_password" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-lock mr-2 text-blue-600"></i>Confirm Password
+                    </label>
+                    <input type="password" 
+                           id="confirm_password" 
+                           name="confirm_password" 
+                           required 
+                           class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400"
+                           placeholder="Confirm your password">
+                    <div id="password-match-error" class="hidden mt-1">
+                        <p class="text-xs text-red-600 flex items-center">
+                            <i class="fas fa-exclamation-circle mr-1"></i>
+                            Passwords do not match!
+                        </p>
+                    </div>
+                </div>
+
+                <button type="submit" 
+                        class="w-full button-gradient text-white py-2.5 sm:py-3 px-6 rounded-lg font-semibold hover:shadow-glow transition-all duration-300 text-base sm:text-lg">
+                    <i class="fas fa-user-plus mr-2"></i>Create Account
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <p class="text-gray-600 text-sm sm:text-base">
+                    Already have an account? 
+                    <a href="{{ url_for('login') }}" class="text-blue-600 hover:text-blue-800 font-semibold transition-colors">
+                        Sign in here
+                    </a>
+                </p>
+            </div>
         </div>
-
-        <div>
-            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-                <i class="fas fa-envelope mr-2"></i>Email
-            </label>
-            <input type="email" 
-                   id="email" 
-                   name="email" 
-                   required 
-                   pattern="[a-zA-Z0-9._%+-]+@gmail\.com$"
-                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                   placeholder="your-email@gmail.com">
-            <p class="text-xs text-gray-500 mt-1">Only Gmail addresses (@gmail.com) are accepted</p>
-        </div>
-
-        <div>
-            <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-                <i class="fas fa-lock mr-2"></i>Password
-            </label>
-            <input type="password" 
-                   id="password" 
-                   name="password" 
-                   required 
-                   minlength="6"
-                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                   placeholder="Create a password (min 6 characters)">
-        </div>
-
-        <div>
-            <label for="confirm_password" class="block text-sm font-medium text-gray-700 mb-2">
-                <i class="fas fa-lock mr-2"></i>Confirm Password
-            </label>
-            <input type="password" 
-                   id="confirm_password" 
-                   name="confirm_password" 
-                   required 
-                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                   placeholder="Confirm your password">
-        </div>
-
-        <button type="submit" 
-                class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200">
-            <i class="fas fa-user-plus mr-2"></i>Sign Up
-        </button>
-    </form>
-
-    <div class="mt-6 text-center">
-        <p class="text-gray-600">
-            Already have an account? 
-            <a href="{{ url_for('login') }}" class="text-blue-600 hover:text-blue-800 font-semibold">
-                Sign in here
-            </a>
-        </p>
-    </div>
-
-    <!-- Registration Info -->
-    <div class="mt-8 p-4 bg-blue-50 rounded-lg">
-        <h3 class="text-sm font-semibold text-blue-700 mb-2">
-            <i class="fas fa-info-circle mr-2"></i>Registration Process
-        </h3>
-        <ul class="text-xs text-blue-600 space-y-1">
-            <li><i class="fas fa-at mr-2"></i>Only Gmail addresses (@gmail.com) accepted</li>
-            <li><i class="fas fa-envelope mr-2"></i>Email verification required</li>
-            <li><i class="fas fa-clock mr-2"></i>Verification code expires in 10 minutes</li>
-            <li><i class="fas fa-shield-alt mr-2"></i>Secure account protection</li>
-        </ul>
-    </div>
-
-    <!-- Account Benefits -->
-    <div class="mt-4 p-4 bg-green-50 rounded-lg">
-        <h3 class="text-sm font-semibold text-green-700 mb-2">
-            <i class="fas fa-star mr-2"></i>Account Benefits
-        </h3>
-        <ul class="text-xs text-green-600 space-y-1">
-            <li><i class="fas fa-check mr-2"></i>Prediction history tracking</li>
-            <li><i class="fas fa-check mr-2"></i>Save favorite car models</li>
-            <li><i class="fas fa-check mr-2"></i>Export prediction reports</li>
-            <li><i class="fas fa-check mr-2"></i>Priority customer support</li>
-        </ul>
     </div>
 </div>
 
 <script>
-// Email domain validation
-document.getElementById('email').addEventListener('input', function() {
-    const email = this.value.toLowerCase();
-    const emailError = document.getElementById('email-error');
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const password = document.getElementById('password');
+    const confirmPassword = document.getElementById('confirm_password');
     
-    if (email && !email.endsWith('@gmail.com')) {
-        this.setCustomValidity('Only Gmail addresses (@gmail.com) are allowed');
-        if (!emailError) {
-            const errorMsg = document.createElement('p');
-            errorMsg.id = 'email-error';
-            errorMsg.className = 'text-xs text-red-500 mt-1';
-            errorMsg.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>Only Gmail addresses are accepted';
-            this.parentNode.appendChild(errorMsg);
-        }
-        this.classList.add('border-red-500');
-        this.classList.remove('border-gray-300');
-    } else {
-        this.setCustomValidity('');
-        if (emailError) {
-            emailError.remove();
-        }
-        this.classList.remove('border-red-500');
-        this.classList.add('border-gray-300');
-    }
-});
-
-// Password confirmation validation
-document.getElementById('confirm_password').addEventListener('input', function() {
-    const password = document.getElementById('password').value;
-    const confirmPassword = this.value;
+    // Password requirement elements
+    const reqLength = document.getElementById('req-length');
+    const reqUppercase = document.getElementById('req-uppercase');
+    const reqLowercase = document.getElementById('req-lowercase');
+    const reqNumber = document.getElementById('req-number');
+    const reqSpecial = document.getElementById('req-special');
     
-    if (password !== confirmPassword) {
-        this.setCustomValidity('Passwords do not match');
-    } else {
-        this.setCustomValidity('');
+    // Function to check password requirements
+    function checkPasswordRequirements(password) {
+        const requirements = {
+            length: password.length >= 8,
+            uppercase: /[A-Z]/.test(password),
+            lowercase: /[a-z]/.test(password),
+            number: /[0-9]/.test(password),
+            special: /[!@#$%^&*]/.test(password)
+        };
+        
+        // Update visual indicators
+        updateRequirement(reqLength, requirements.length);
+        updateRequirement(reqUppercase, requirements.uppercase);
+        updateRequirement(reqLowercase, requirements.lowercase);
+        updateRequirement(reqNumber, requirements.number);
+        updateRequirement(reqSpecial, requirements.special);
+        
+        return requirements;
     }
+    
+    // Function to update requirement visual indicator
+    function updateRequirement(element, isValid) {
+        const icon = element.querySelector('i');
+        const text = element.querySelector('span');
+        
+        if (isValid) {
+            icon.className = 'fas fa-check text-green-500 mr-2';
+            text.className = 'text-green-600';
+        } else {
+            icon.className = 'fas fa-circle text-gray-300 mr-2';
+            text.className = 'text-gray-500';
+        }
+    }
+    
+    // Real-time password validation
+    password.addEventListener('input', function() {
+        checkPasswordRequirements(this.value);
+        
+        // Check password confirmation
+        if (confirmPassword.value && this.value !== confirmPassword.value) {
+            confirmPassword.classList.add('border-red-500');
+            confirmPassword.classList.remove('border-gray-300');
+            document.getElementById('password-match-error').classList.remove('hidden');
+        } else if (confirmPassword.value) {
+            confirmPassword.classList.remove('border-red-500');
+            confirmPassword.classList.add('border-gray-300');
+            document.getElementById('password-match-error').classList.add('hidden');
+        }
+    });
+    
+    form.addEventListener('submit', function(e) {
+        // Check password requirements
+        const requirements = checkPasswordRequirements(password.value);
+        const allRequirementsMet = Object.values(requirements).every(req => req);
+        
+        if (!allRequirementsMet) {
+            e.preventDefault();
+            alert('Please ensure your password meets all requirements:\n\n' +
+                  '• At least 8 characters\n' +
+                  '• One uppercase letter (A-Z)\n' +
+                  '• One lowercase letter (a-z)\n' +
+                  '• One number (0-9)\n' +
+                  '• One special character (!@#$%^&*)');
+            return;
+        }
+        
+        if (password.value !== confirmPassword.value) {
+            e.preventDefault();
+            // Show validation message instead of alert
+            document.getElementById('password-match-error').classList.remove('hidden');
+            confirmPassword.classList.add('border-red-500');
+            confirmPassword.classList.remove('border-gray-300');
+            confirmPassword.focus();
+            return;
+        }
+        
+        const username = document.getElementById('username').value;
+        if (username.length < 3) {
+            e.preventDefault();
+            alert('Username must be at least 3 characters long!');
+            return;
+        }
+        
+        if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+            e.preventDefault();
+            alert('Username can only contain letters, numbers, and underscores!');
+            return;
+        }
+    });
+    
+    // Real-time password confirmation check
+    confirmPassword.addEventListener('input', function() {
+        if (password.value !== confirmPassword.value) {
+            confirmPassword.classList.add('border-red-500');
+            confirmPassword.classList.remove('border-gray-300');
+            document.getElementById('password-match-error').classList.remove('hidden');
+        } else {
+            confirmPassword.classList.remove('border-red-500');
+            confirmPassword.classList.add('border-gray-300');
+            document.getElementById('password-match-error').classList.add('hidden');
+        }
+    });
 });
 </script>
 {% endblock %}

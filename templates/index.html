@@ -3,33 +3,35 @@
 {% block content %}
 <div class="text-center">
     <!-- Hero Section -->
-    <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20 px-6 rounded-lg mb-12">
-        <h1 class="text-5xl font-bold mb-6">
-            <i class="fas fa-car text-6xl mb-4 block"></i>
+    <div class="gradient-bg text-white py-12 sm:py-16 lg:py-20 px-4 sm:px-6 rounded-xl mb-8 sm:mb-12 shadow-glow">
+        <div class="bg-gradient-to-br from-blue-500/20 to-green-500/20 w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-glow">
+            <i class="fas fa-car text-2xl sm:text-3xl lg:text-4xl text-white"></i>
+        </div>
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6">
             Car Price Prediction System
         </h1>
-        
+        <p class="text-base sm:text-lg lg:text-xl text-blue-100 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
+            Advanced machine learning powered car price prediction with accurate estimates and detailed analytics
+        </p>
         
         {% if not session.user_id %}
-            <div class="space-x-4">
-                <a href="{{ url_for('register') }}" class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg text-lg font-semibold inline-block">
-                    <i class="fas fa-user-plus mr-2"></i>Sign Up
-                </a>
-                <a href="{{ url_for('login') }}" class="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 rounded-lg text-lg font-semibold inline-block">
+            
+              </a>
+                <a href="{{ url_for('login') }}" class="bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg text-base sm:text-lg font-semibold inline-block transition-all duration-300 w-full sm:w-auto">
                     <i class="fas fa-sign-in-alt mr-2"></i>Sign In
                 </a>
             </div>
         {% else %}
-            <div class="space-x-4">
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
                 {% if session.role == 'admin' %}
-                    <a href="{{ url_for('admin_dashboard') }}" class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg text-lg font-semibold inline-block">
+                    <a href="{{ url_for('admin_dashboard') }}" class="button-gradient hover:shadow-glow text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg text-base sm:text-lg font-semibold inline-block transition-all duration-300 w-full sm:w-auto">
                         <i class="fas fa-tachometer-alt mr-2"></i>Admin Dashboard
                     </a>
                 {% else %}
-                    <a href="{{ url_for('predict') }}" class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg text-lg font-semibold inline-block">
+                    <a href="{{ url_for('predict') }}" class="button-gradient hover:shadow-glow text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg text-base sm:text-lg font-semibold inline-block transition-all duration-300 w-full sm:w-auto">
                         <i class="fas fa-calculator mr-2"></i>Predict Car Price
                     </a>
-                    <a href="{{ url_for('user_dashboard') }}" class="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 rounded-lg text-lg font-semibold inline-block">
+                    <a href="{{ url_for('user_dashboard') }}" class="bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg text-base sm:text-lg font-semibold inline-block transition-all duration-300 w-full sm:w-auto">
                         <i class="fas fa-user mr-2"></i>My Dashboard
                     </a>
                 {% endif %}
@@ -37,50 +39,77 @@
         {% endif %}
     </div>
 
-  
-   
+    <!-- Features Section -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-8 sm:mb-12">
+        <div class="card-gradient p-4 sm:p-6 rounded-xl shadow-glow border border-gray-200 hover-lift">
+            <div class="bg-gradient-to-br from-blue-500 to-blue-600 w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-glow">
+                <i class="fas fa-brain text-white text-lg sm:text-xl"></i>
+            </div>
+            <h3 class="text-lg sm:text-xl font-semibold text-gray-800 mb-2">AI-Powered</h3>
+            <p class="text-sm sm:text-base text-gray-600">Advanced machine learning algorithms for accurate price predictions</p>
+        </div>
+        
+        <div class="card-gradient p-4 sm:p-6 rounded-xl shadow-glow border border-gray-200 hover-lift">
+            <div class="bg-gradient-to-br from-green-500 to-green-600 w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-glow">
+                <i class="fas fa-chart-line text-white text-lg sm:text-xl"></i>
+            </div>
+            <h3 class="text-lg sm:text-xl font-semibold text-gray-800 mb-2">Real-time Analytics</h3>
+            <p class="text-sm sm:text-base text-gray-600">Comprehensive analytics and insights for informed decisions</p>
+        </div>
+        
+        <div class="card-gradient p-4 sm:p-6 rounded-xl shadow-glow border border-gray-200 hover-lift sm:col-span-2 lg:col-span-1">
+            <div class="bg-gradient-to-br from-purple-500 to-purple-600 w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-glow">
+                <i class="fas fa-shield-alt text-white text-lg sm:text-xl"></i>
+            </div>
+            <h3 class="text-lg sm:text-xl font-semibold text-gray-800 mb-2">Secure & Reliable</h3>
+            <p class="text-sm sm:text-base text-gray-600">Enterprise-grade security with reliable performance</p>
+        </div>
+    </div>
     
     <!-- Footer -->
-    <footer class="mt-16 border-t border-gray-200 pt-8 pb-10 text-center text-sm text-gray-600">
+    <footer class="mt-12 sm:mt-16 border-t border-gray-200 pt-6 sm:pt-8 pb-8 sm:pb-10 text-center text-sm text-gray-600">
         <!-- Brand / Web name -->
-        <div class="mb-2 flex items-center justify-center space-x-2">
-            <i class="fas fa-car text-blue-600"></i>
-            <span class="font-semibold text-gray-800">Car Price Prediction</span>
-            <span class="hidden sm:inline">• Powered by Machine Learning</span>
+        <div class="mb-2 flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-car text-blue-600"></i>
+                <span class="font-semibold text-gray-800">Car Price Prediction System</span>
+            </div>
+            <span class="hidden sm:inline">•</span>
+            <span class="text-xs sm:text-sm">Powered by Machine Learning</span>
         </div>
 
         <!-- Social buttons -->
-        <div class="flex items-center justify-center space-x-4 mb-3">
-            <a href="https://facebook.com" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition" aria-label="Facebook">
-                <i class="fab fa-facebook-f"></i>
+        <div class="flex items-center justify-center space-x-3 sm:space-x-4 mb-3">
+            <a href="https://facebook.com" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-all duration-300" aria-label="Facebook">
+                <i class="fab fa-facebook-f text-sm sm:text-base"></i>
             </a>
-            <a href="https://twitter.com" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition" aria-label="Twitter">
-                <i class="fab fa-twitter"></i>
+            <a href="https://twitter.com" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-all duration-300" aria-label="Twitter">
+                <i class="fab fa-twitter text-sm sm:text-base"></i>
             </a>
-            <a href="https://instagram.com" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-pink-50 text-pink-600 hover:bg-pink-100 transition" aria-label="Instagram">
-                <i class="fab fa-instagram"></i>
+            <a href="https://instagram.com" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-pink-50 text-pink-600 hover:bg-pink-100 transition-all duration-300" aria-label="Instagram">
+                <i class="fab fa-instagram text-sm sm:text-base"></i>
             </a>
-            <a href="https://linkedin.com" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100 transition" aria-label="LinkedIn">
-                <i class="fab fa-linkedin-in"></i>
+            <a href="https://linkedin.com" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all duration-300" aria-label="LinkedIn">
+                <i class="fab fa-linkedin-in text-sm sm:text-base"></i>
             </a>
-            <a href="mailto:support@example.com" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-gray-50 text-gray-700 hover:bg-gray-100 transition" aria-label="Email">
-                <i class="fas fa-envelope"></i>
+            <a href="mailto:support@example.com" class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gray-50 text-gray-700 hover:bg-gray-100 transition-all duration-300" aria-label="Email">
+                <i class="fas fa-envelope text-sm sm:text-base"></i>
             </a>
         </div>
 
         <!-- Footer links -->
-        <div class="space-x-4 mb-2">
-            <a href="{{ url_for('home') }}" class="hover:text-gray-800">Home</a>
+        <div class="flex flex-wrap justify-center gap-3 sm:gap-4 mb-2 text-xs sm:text-sm">
+            <a href="{{ url_for('home') }}" class="hover:text-gray-800 transition-colors">Home</a>
             {% if not session.user_id %}
-                <a href="{{ url_for('register') }}" class="hover:text-gray-800">Sign Up</a>
-                <a href="{{ url_for('login') }}" class="hover:text-gray-800">Sign In</a>
+                <a href="{{ url_for('register') }}" class="hover:text-gray-800 transition-colors">Sign Up</a>
+                <a href="{{ url_for('login') }}" class="hover:text-gray-800 transition-colors">Sign In</a>
             {% else %}
                 {% if session.role == 'admin' %}
-                    <a href="{{ url_for('admin_dashboard') }}" class="hover:text-gray-800">Dashboard</a>
+                    <a href="{{ url_for('admin_dashboard') }}" class="hover:text-gray-800 transition-colors">Dashboard</a>
                 {% else %}
-                    <a href="{{ url_for('user_dashboard') }}" class="hover:text-gray-800">My Dashboard</a>
+                    <a href="{{ url_for('user_dashboard') }}" class="hover:text-gray-800 transition-colors">My Dashboard</a>
                 {% endif %}
-                <a href="{{ url_for('logout') }}" class="hover:text-gray-800">Logout</a>
+                <a href="{{ url_for('logout') }}" class="hover:text-gray-800 transition-colors">Logout</a>
             {% endif %}
         </div>
 
